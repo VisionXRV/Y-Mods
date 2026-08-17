@@ -1,0 +1,4638 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Y-Mod – Mods für deine Survival Welt</title>
+  <meta name="description"
+    content="Y-Mod – Dein Mod Center für Minecraft Mods, die du für deine Survival Welt brauchst.">
+  <meta name="theme-color" content="#0D0B09">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235D9B2B'/%3E%3Cstop offset='0.5' stop-color='%232CB9AA'/%3E%3Cstop offset='1' stop-color='%23FCDB05'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='8' fill='url(%23g)'/%3E%3Ctext x='50' y='72' font-family='Arial' font-size='58' font-weight='bold' fill='%23fff' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E">
+  <style>
+    /* =====================================================================
+   HOW TO ADD A NEW MOD – STEP-BY-STEP GUIDE FOR AI / DEVELOPER
+   =====================================================================
+
+   This is a single-page application (SPA). There are NO separate files,
+   NO framework, NO build system. Everything is in this one HTML file.
+
+   OVERALL STRUCTURE:
+   - CSS (<style>)         : All design tokens, layout, animations, mod-specific styles
+   - HTML (<main>)          : 4 view types per mod, each as a separate <div> with an ID
+   - JavaScript (<script>)  : View transition system, intro animation, scroll effects
+
+   EACH MOD CONSISTS OF THESE PIECES (using "ycoord" as the existing example):
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 1. CSS – MOD-SPECIFIC STYLES (3 rules per mod)                    │
+   │                                                                    │
+   │    Location: Search for ".mod-banner-bg.ycoord" to find the area.  │
+   │                                                                    │
+   │    You need to add 3 CSS rules with a unique short ID (e.g. "xx"): │
+   │      .mod-banner-bg.XX         – dark theme banner gradient        │
+   │      [data-theme="light"]      – light theme banner gradient       │
+   │        .mod-banner-bg.XX                                          │
+   │      .mod-banner-icon.XX       – icon background gradient          │
+   │                                                                    │
+   │    Use existing Minecraft CSS variables like:                      │
+   │      --grad-grass, --grad-warm, --grad-diamond, --grad-ender,     │
+   │      --grad-redstone, --grad-gold, --grad-stone, --grad-dirt      │
+   │                                                                    │
+   │    Pick colors that match the mod's theme (farm=warm, HUD=diamond) │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 2. CSS – HIDDEN RULE (CRITICAL!)                                  │
+   │                                                                    │
+   │    Location: Search for "#view-home.hidden,"                       │
+   │                                                                    │
+   │    EVERY view ID must be listed here, otherwise the view will      │
+   │    stay visible (display:none won't apply). This was a real bug.   │
+   │    Add: #view-mod-XX.hidden, #view-versions-XX.hidden,             │
+   │         #view-download-XX.hidden                                   │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 3. CSS – DOWNLOAD PAGE ANIMATIONS                                  │
+   │                                                                    │
+   │    Location: Search for "#view-download:not(.hidden) .back-link"   │
+   │                                                                    │
+   │    There are 6 animation rules for the download page elements.     │
+   │    You must add the new view ID as a comma-separated selector:     │
+   │      #view-download:not(.hidden) .back-link,                       │
+   │      #view-download-XX:not(.hidden) .back-link { ... }             │
+   │    Repeat for all 6 rules (.badge-light, .download-title, etc.)   │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 4. HTML – MOD CARD ON HOME PAGE                                    │
+   │                                                                    │
+   │    Location: Search for "mods-grid stagger"                        │
+   │                                                                    │
+   │    Each mod needs a .mod-card div inside .mods-grid. Copy the      │
+   │    structure from the existing ycoord card. You need:              │
+   │      - onclick="showMod('XX')"        (unique mod ID)              │
+   │      - .mod-banner-bg.XX              (CSS class from step 1)      │
+   │      - .mod-banner-icon.XX pixel      (CSS class from step 1)      │
+   │      - .mod-banner-tag                (category label: HUD/Farm)   │
+   │      - .mod-banner-version            (e.g. "v1.0.0")              │
+   │      - <h3>Mod Name</h3>                                           │
+   │      - <p>Description</p>                                          │
+   │      - .mod-chip MC <b>26.2</b>                                    │
+   │      - .mod-chip <b>XX</b> KB                                      │
+   │      - .mod-chip Client-Mod                                        │
+   │      - .mod-vp-item for each supported MC version                  │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 5. HTML – DETAIL VIEW (view-mod-XX)                                │
+   │                                                                    │
+   │    Location: After the previous mod's detail view.                 │
+   │                                                                    │
+   │    Copy the entire view-mod structure from ycoord. It contains:    │
+   │      - <div id="view-mod-XX" class="hidden">                       │
+   │      - .mod-hero (badge, title, description, CTA buttons, facts)   │
+   │      - .mod-hero-right with .mod-icon-placeholder (icon/image)     │
+   │      - #mod-features-XX section with 6 .card items (features)      │
+   │      - #mod-installation-XX section with 4 .step items             │
+   │      - CTA section at the bottom                                   │
+   │                                                                    │
+   │    Key onclick handlers:                                           │
+   │      - "Mod herunterladen" button → showVersions('XX')             │
+   │      - "Installationsanleitung" link → href="#mod-installation-XX" │
+   │      - CTA button → showVersions('XX')                             │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 6. HTML – VERSIONS VIEW (view-versions-XX)                         │
+   │                                                                    │
+   │    Location: After the previous mod's versions view.               │
+   │                                                                    │
+   │    Copy the view-versions structure. It contains:                  │
+   │      - <div id="view-versions-XX" class="hidden">                  │
+   │      - Back button → showMod('XX')                                 │
+   │      - .version-item with onclick="showDownload('XX','26.2')"      │
+   │      - .version-empty with "Weitere Versionen..." text             │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 7. HTML – DOWNLOAD VIEW (view-download-XX)                         │
+   │                                                                    │
+   │    Location: After the previous mod's download view.               │
+   │                                                                    │
+   │    Copy the view-download structure. It contains:                  │
+   │      - <div id="view-download-XX" class="hidden">                  │
+   │      - Back button → showVersions('XX')                            │
+   │      - #downloadBadge-XX, #downloadSub-XX, #downloadLink-XX        │
+   │      - Download button (add href="#" and style="pointer-events:none│
+   │        ;opacity:0.5;" if download is not ready yet)               │
+   │      - "Download kommt bald" text if not ready                     │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 8. JAVASCRIPT – ROUTING (3 changes needed)                        │
+   │                                                                    │
+   │    Location: Search for "VIEW TRANSITIONS" in the <script> block.  │
+   │                                                                    │
+   │    a) Add view variables after the existing ones:                  │
+   │       const viewModXX = document.getElementById('view-mod-XX');     │
+   │       const viewVersionsXX = document.getElementById('view-versions-XX');│
+   │       const viewDownloadXX = document.getElementById('view-download-XX');│
+   │                                                                    │
+   │    b) Add to the allViews array:                                   │
+   │       const allViews = [..., viewModXX, viewVersionsXX, viewDownloadXX];│
+   │                                                                    │
+   │    c) Update the modNames object and routing functions:               │
+   │       const modNames = { ycoord: 'Y-Coordinate HUD',                │
+   │                          xx: 'Your New Mod Name' };                  │
+   │       function showMod(id) {                                         │
+   │         if (navModName && modNames[id]) navModName.textContent = ... │
+   │         showView(id === 'XX' ? viewModXX : viewMod, id);             │
+   │       }                                                              │
+   │       (same pattern for showVersions and showDownload)               │
+   │                                                                    │
+   │    IMPORTANT: Each mod gets a unique short ID (e.g. "ycoord","xx"). │
+   │    This ID is used in onclick handlers and in the routing functions.│
+   └─────────────────────────────────────────────────────────────────────┘
+
+   NAMING CONVENTION FOR VIEW IDs:
+     Home page card:     onclick="showMod('UNIQUE_ID')"
+     Detail view:        id="view-mod-UNIQUE_ID"
+     Versions view:      id="view-versions-UNIQUE_ID"
+     Download view:      id="view-download-UNIQUE_ID"
+     Download elements:  id="downloadBadge-UNIQUE_ID"
+                         id="downloadSub-UNIQUE_ID"
+                         id="downloadLink-UNIQUE_ID"
+     CSS classes:        .mod-banner-bg.UNIQUE_ID
+                         .mod-banner-icon.UNIQUE_ID
+     Feature section:    id="mod-features-UNIQUE_ID"
+     Install section:    id="mod-installation-UNIQUE_ID"
+
+   COMMON MISTAKES TO AVOID:
+     - Forgetting to add the view ID to the .hidden CSS rule (=broken layout)
+     - Forgetting to add the view ID to the download animation CSS rules
+     - Forgetting to add the view to the allViews array in JavaScript
+     - Using the same short ID for two different mods
+     - Forgetting to update the navMod bar name (line ~3871) when switching mods
+
+   KNOWN LIMITATION (FIXED):
+     The top nav bar (#navMod) now dynamically updates via the modNames
+     object in showMod(). When adding a new mod, add the name to modNames:
+       const modNames = { ycoord: 'Y-Coordinate HUD', xx: 'Your Mod Name' };
+
+   DETAILED CSS VARIABLES AVAILABLE FOR BANNER GRADIENTS:
+     Dark backgrounds:   --bg (#0D0B09), --bg-alt (#15120E)
+     Gradient presets:
+       --grad-grass    (green: #5D9B2B → #3D7A18)    good for: nature, plants
+       --grad-warm     (gold: #8B6914 → #FCDB05)     good for: farming, harvest
+       --grad-diamond  (teal: #2CB9AA → #1FA89A)     good for: tech, HUD
+       --grad-ender    (purple: #9B59B6 → #7D3C98)   good for: magic, ender
+       --grad-redstone (red: #FF3333 → #CC2222)       good for: combat, redstone
+       --grad-gold     (yellow: #FCDB05 → #E5C100)    good for: economy, valuables
+       --grad-stone    (grey: #7F7F7F → #5A5A5A)      good for: building, utility
+       --grad-dirt     (brown: #8B6914 → #6B4E12)     good for: terrain, digging
+   ===================================================================== */
+
+   /* ============================
+   DESIGN TOKENS – MINECRAFT
+   ============================ */
+    :root {
+      --bg: #0D0B09;
+      --bg-alt: #15120E;
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface-hover: rgba(255, 255, 255, 0.07);
+      --surface-solid: #1A1714;
+      --card: #16130F;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(255, 255, 255, 0.12);
+      --text: #E8E4DF;
+      --text-secondary: #9C9488;
+      --text-tertiary: #605A50;
+      /* Minecraft Palette */
+      --grass: #5D9B2B;
+      --grass-dark: #3D7A18;
+      --dirt: #8B6914;
+      --dirt-dark: #6B4E12;
+      --stone: #7F7F7F;
+      --stone-dark: #5A5A5A;
+      --diamond: #2CB9AA;
+      --diamond-dark: #1FA89A;
+      --redstone: #FF3333;
+      --redstone-dark: #CC2222;
+      --gold: #FCDB05;
+      --gold-dark: #E5C100;
+      --ender: #9B59B6;
+      --ender-dark: #7D3C98;
+      --nether: #8B3A3A;
+      --lapis: #345EC3;
+      --emerald: #17DD62;
+      --obsidian: #1B1027;
+      --netherite: #504945;
+      /* Accents */
+      --accent: var(--diamond);
+      --accent-light: #5EEAD4;
+      --accent-glow: rgba(44, 185, 170, 0.35);
+      --grad: linear-gradient(135deg, #5D9B2B, #2CB9AA);
+      --grad-warm: linear-gradient(135deg, #8B6914, #FCDB05);
+      --grad-full: linear-gradient(135deg, #5D9B2B, #2CB9AA, #FCDB05, #8B3A3A);
+      --grad-dirt: linear-gradient(135deg, #8B6914, #6B4E12);
+      --grad-grass: linear-gradient(135deg, #5D9B2B, #3D7A18);
+      --grad-stone: linear-gradient(135deg, #7F7F7F, #5A5A5A);
+      --grad-diamond: linear-gradient(135deg, #2CB9AA, #1FA89A);
+      --grad-gold: linear-gradient(135deg, #FCDB05, #E5C100);
+      --grad-ender: linear-gradient(135deg, #9B59B6, #7D3C98);
+      --grad-redstone: linear-gradient(135deg, #FF3333, #CC2222);
+      /* Layout */
+      --maxw: 1080px;
+      --radius: 4px;
+      --radius-sm: 3px;
+      --radius-xs: 2px;
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+      --ease-spring: cubic-bezier(0.34, 1.2, 0.64, 1);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 40px var(--accent-glow);
+      /* Minecraft-specific */
+      --mc-border: 2px solid rgba(255, 255, 255, 0.08);
+      --mc-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    /* ============================
+   LIGHT THEME
+   ============================ */
+    [data-theme="light"] {
+      --bg: #E8E4DF;
+      --bg-alt: #DDD8D0;
+      --surface: rgba(0, 0, 0, 0.04);
+      --surface-hover: rgba(0, 0, 0, 0.07);
+      --surface-solid: #F5F1EC;
+      --card: #F0EBE4;
+      --border: rgba(0, 0, 0, 0.10);
+      --border-hover: rgba(0, 0, 0, 0.18);
+      --text: #2C2520;
+      --text-secondary: #6B5E52;
+      --text-tertiary: #A09488;
+      --accent: #3D7A18;
+      --accent-light: #5D9B2B;
+      --accent-glow: rgba(93, 155, 43, 0.2);
+      --grad: linear-gradient(135deg, #3D7A18, #2CB9AA);
+      --grad-warm: linear-gradient(135deg, #8B6914, #C9A800);
+      --grad-full: linear-gradient(135deg, #3D7A18, #2CB9AA, #C9A800, #8B3A3A);
+      --grad-dirt: linear-gradient(135deg, #8B6914, #6B4E12);
+      --grad-grass: linear-gradient(135deg, #5D9B2B, #3D7A18);
+      --grad-stone: linear-gradient(135deg, #7F7F7F, #5A5A5A);
+      --grad-diamond: linear-gradient(135deg, #1FA89A, #178A7E);
+      --grad-gold: linear-gradient(135deg, #E5C100, #C9A800);
+      --grad-ender: linear-gradient(135deg, #7D3C98, #6B2D85);
+      --grad-redstone: linear-gradient(135deg, #CC2222, #AA1111);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
+      --shadow-glow: 0 0 40px rgba(93, 155, 43, 0.1);
+      --mc-border: 2px solid rgba(0, 0, 0, 0.10);
+      --mc-inner: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    /* ============================
+   RESET & BASE
+   ============================ */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background 0.4s var(--ease), color 0.3s var(--ease);
+      font-size: 17px;
+    }
+
+    ::selection {
+      background: rgba(44, 185, 170, 0.3);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    code {
+      font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+      font-size: 0.85em;
+      color: var(--diamond);
+      background: var(--surface);
+      padding: 3px 8px;
+      border: var(--mc-border);
+      border-radius: var(--radius-xs);
+      box-shadow: var(--mc-inner);
+    }
+
+    .container {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .pixel {
+      font-family: "Press Start 2P", monospace;
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: unset;
+    }
+
+    /* ============================
+   PROGRESS BAR
+   ============================ */
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      z-index: 300;
+      background: var(--grad-grass);
+      transition: width 0.05s linear;
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    /* ============================
+   BACKGROUND
+   ============================ */
+    .aurora {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .blob {
+      position: absolute;
+      border-radius: 0;
+      filter: blur(100px);
+      opacity: 0.2;
+      will-change: transform;
+    }
+
+    .blob-1 {
+      width: 600px;
+      height: 600px;
+      left: -200px;
+      top: -180px;
+      background: radial-gradient(circle, var(--grass), transparent 65%);
+      animation: drift1 30s ease-in-out infinite alternate;
+    }
+
+    .blob-2 {
+      width: 500px;
+      height: 500px;
+      right: -160px;
+      top: 10%;
+      background: radial-gradient(circle, var(--diamond), transparent 65%);
+      animation: drift2 36s ease-in-out infinite alternate;
+    }
+
+    .blob-3 {
+      width: 440px;
+      height: 440px;
+      left: 30%;
+      bottom: -180px;
+      background: radial-gradient(circle, var(--gold), transparent 65%);
+      animation: drift3 42s ease-in-out infinite alternate;
+    }
+
+    [data-theme="light"] .blob {
+      opacity: 0.08;
+      filter: blur(140px);
+    }
+
+    @keyframes drift1 {
+      from {
+        transform: translate(0, 0) scale(1)
+      }
+
+      to {
+        transform: translate(50px, -40px) scale(1.1)
+      }
+    }
+
+    @keyframes drift2 {
+      from {
+        transform: translate(0, 0) scale(1)
+      }
+
+      to {
+        transform: translate(-40px, 30px) scale(0.9)
+      }
+    }
+
+    @keyframes drift3 {
+      from {
+        transform: translate(0, 0) scale(1)
+      }
+
+      to {
+        transform: translate(25px, 40px) scale(1.08)
+      }
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.5;
+      mask-image: radial-gradient(ellipse 70% 50% at 50% 0%, black 30%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 0%, black 30%, transparent 100%);
+    }
+
+    [data-theme="light"] .bg-grid {
+      opacity: 0.3;
+    }
+
+    main,
+    footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Dirt texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' fill='%23000' fill-opacity='0'/%3E%3Crect x='0' y='0' width='8' height='8' fill='%23ffffff' fill-opacity='0.015'/%3E%3Crect x='16' y='8' width='8' height='8' fill='%23ffffff' fill-opacity='0.01'/%3E%3Crect x='8' y='16' width='8' height='8' fill='%23ffffff' fill-opacity='0.012'/%3E%3Crect x='24' y='24' width='8' height='8' fill='%23ffffff' fill-opacity='0.008'/%3E%3C/svg%3E");
+      background-size: 32px 32px;
+      opacity: 1;
+    }
+
+    /* ============================
+   INTRO
+   ============================ */
+    body.intro-active {
+      overflow: hidden;
+    }
+
+    body.intro-active #view-home,
+    body.intro-active #view-mod {
+      opacity: 0;
+    }
+
+    body.site-in #view-home {
+      opacity: 1;
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ========== INTRO ========== */
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #060804;
+      overflow: hidden;
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #intro.open {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Animated pixel grid bg */
+    .intro-grid {
+      position: absolute;
+      inset: -50%;
+      background-image:
+        linear-gradient(rgba(93, 155, 43, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(93, 155, 43, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridScroll 6s linear infinite;
+      opacity: 0;
+      transition: opacity 1s ease 0.2s;
+      z-index: 0;
+    }
+
+    #intro.go .intro-grid {
+      opacity: 1;
+    }
+
+    @keyframes gridScroll {
+      to {
+        transform: translate(48px, 48px);
+      }
+    }
+
+    /* Radial energy pulse */
+    .intro-pulse {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 500px;
+      height: 500px;
+      transform: translate(-50%, -50%) scale(0.4);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(93, 155, 43, 0.15) 0%, rgba(44, 185, 170, 0.05) 40%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    #intro.go .intro-pulse {
+      opacity: 1;
+      animation: pulseExpand 2.5s ease-out 0.3s both;
+    }
+
+    @keyframes pulseExpand {
+      0% {
+        transform: translate(-50%, -50%) scale(0.4);
+        opacity: 0;
+      }
+
+      30% {
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(1.6);
+        opacity: 0;
+      }
+    }
+
+    /* Canvas particles */
+    #introCanvas {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+
+    /* Vignette overlay */
+    .intro-vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 25%, rgba(0, 0, 0, 0.65) 100%);
+    }
+
+    /* Horizontal sweep line */
+    .intro-sweep {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -3px;
+      height: 3px;
+      z-index: 4;
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent 2%, var(--grass) 25%, var(--diamond) 75%, transparent 98%);
+      box-shadow: 0 0 30px 4px rgba(93, 155, 43, 0.3), 0 0 80px 2px rgba(44, 185, 170, 0.15);
+      opacity: 0;
+    }
+
+    #intro.go .intro-sweep {
+      animation: sweepDown 1.4s cubic-bezier(0.33, 0, 0.2, 1) 0.5s both;
+    }
+
+    @keyframes sweepDown {
+      0% {
+        top: -3px;
+        opacity: 0;
+      }
+
+      8% {
+        opacity: 0.9;
+      }
+
+      88% {
+        opacity: 0.9;
+      }
+
+      100% {
+        top: 100%;
+        opacity: 0;
+      }
+    }
+
+    /* Flash on exit */
+    .flash {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(circle at center, rgba(93, 155, 43, 0.25), rgba(255, 255, 255, 0.5) 35%, transparent 65%);
+      transform: scale(0.7);
+    }
+
+    #intro.open .flash {
+      animation: flashBurst 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes flashBurst {
+      0% {
+        opacity: 0;
+        transform: scale(0.7);
+      }
+
+      25% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.8);
+      }
+    }
+
+    /* Main content wrapper */
+    .intro-content {
+      position: relative;
+      z-index: 5;
+      text-align: center;
+      padding: 0 24px;
+      transition: opacity 0.4s var(--ease), transform 0.4s var(--ease), filter 0.4s var(--ease);
+    }
+
+    #intro.exit .intro-content {
+      opacity: 0;
+      transform: scale(1.08) translateY(-20px);
+      filter: blur(12px);
+    }
+
+    /* ========== LOGO ========== */
+    .intro-logo {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 44px;
+    }
+
+    /* Glow behind logo */
+    .intro-logo-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      transform: translate(-50%, -50%) scale(0.3);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(93, 155, 43, 0.5) 0%, rgba(44, 185, 170, 0.2) 40%, transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #intro.go .intro-logo-glow {
+      animation: glowIn 0.8s cubic-bezier(0.2, 0.8, 0.3, 1) 0.5s both, glowBreath 3s ease-in-out 1.3s infinite;
+    }
+
+    @keyframes glowIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    @keyframes glowBreath {
+
+      0%,
+      100% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.15);
+      }
+    }
+
+    /* Y Logo mark with glitch effect */
+    .intro-logo-mark {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 76px;
+      font-weight: 800;
+      line-height: 1;
+      font-family: "Press Start 2P", monospace;
+      color: #fff;
+      opacity: 0;
+      z-index: 2;
+    }
+
+    #intro.go .intro-logo-mark {
+      animation: logoGlitch 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) 0.4s both;
+    }
+
+    @keyframes logoGlitch {
+      0% {
+        opacity: 0;
+        transform: scale(2.5);
+        filter: blur(20px) brightness(3);
+      }
+
+      15% {
+        opacity: 1;
+        transform: scale(0.9) translate(-3px, 2px);
+        filter: blur(0) brightness(2);
+        clip-path: inset(15% 0 55% 0);
+      }
+
+      30% {
+        transform: scale(1.05) translate(4px, -1px);
+        clip-path: inset(60% 0 10% 0);
+        filter: blur(0) brightness(1.5);
+      }
+
+      45% {
+        transform: scale(0.97) translate(-2px, 3px);
+        clip-path: inset(5% 0 70% 0);
+        filter: brightness(1.2);
+      }
+
+      60% {
+        transform: scale(1.02) translate(1px, -1px);
+        clip-path: inset(40% 0 30% 0);
+        filter: brightness(1.1);
+      }
+
+      80% {
+        transform: scale(1);
+        clip-path: inset(0);
+        filter: brightness(1);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1) translate(0, 0);
+        clip-path: inset(0);
+        filter: brightness(1) drop-shadow(0 0 24px rgba(93, 155, 43, 0.6));
+      }
+    }
+
+    /* Chromatic aberration pseudo-elements */
+    .intro-logo-mark::before,
+    .intro-logo-mark::after {
+      content: 'Y';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 76px;
+      font-weight: 800;
+      font-family: "Press Start 2P", monospace;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .intro-logo-mark::before {
+      color: rgba(93, 155, 43, 0.7);
+    }
+
+    .intro-logo-mark::after {
+      color: rgba(44, 185, 170, 0.7);
+    }
+
+    #intro.go .intro-logo-mark::before {
+      animation: chromaR 0.5s ease-out 0.4s both;
+    }
+
+    #intro.go .intro-logo-mark::after {
+      animation: chromaB 0.5s ease-out 0.42s both;
+    }
+
+    @keyframes chromaR {
+      0% {
+        opacity: 0.9;
+        transform: translate(-10px, 5px);
+      }
+
+      30% {
+        opacity: 0.5;
+        transform: translate(6px, -3px);
+      }
+
+      60% {
+        opacity: 0.2;
+        transform: translate(-2px, 1px);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(0);
+      }
+    }
+
+    @keyframes chromaB {
+      0% {
+        opacity: 0.9;
+        transform: translate(10px, -5px);
+      }
+
+      30% {
+        opacity: 0.5;
+        transform: translate(-6px, 3px);
+      }
+
+      60% {
+        opacity: 0.2;
+        transform: translate(2px, -1px);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(0);
+      }
+    }
+
+    /* Conic gradient ring */
+    .intro-ring {
+      position: absolute;
+      inset: -16px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, var(--grass), var(--diamond), var(--gold), var(--dirt), var(--grass));
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+      opacity: 0;
+      z-index: 1;
+    }
+
+    #intro.go .intro-ring {
+      animation: ringReveal 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) 0.5s both, introSpin 2s linear 0.5s infinite;
+    }
+
+    @keyframes ringReveal {
+      0% {
+        opacity: 0;
+        transform: scale(1.8) rotate(-120deg);
+      }
+
+      100% {
+        opacity: 0.85;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+
+    @keyframes introSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Orbiting pixel dots */
+    .intro-orbit {
+      position: absolute;
+      z-index: 1;
+      opacity: 0;
+    }
+
+    #intro.go .intro-orbit {
+      animation: orbitFadeIn 0.4s ease 0.7s both;
+    }
+
+    .intro-orbit.o1 {
+      inset: -52px;
+      animation-delay: 0.7s !important;
+    }
+
+    #intro.go .intro-orbit.o1 {
+      animation: orbitFadeIn 0.4s ease 0.7s both, introSpin 4s linear 0.7s infinite;
+    }
+
+    .intro-orbit.o2 {
+      inset: -70px;
+    }
+
+    #intro.go .intro-orbit.o2 {
+      animation: orbitFadeIn 0.4s ease 0.8s both, introSpin 5.5s linear 0.8s infinite reverse;
+    }
+
+    @keyframes orbitFadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .intro-orbit .intro-cube {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      border-radius: 0;
+    }
+
+    .intro-orbit.o1 .intro-cube {
+      background: var(--grass);
+      box-shadow: 0 0 10px rgba(93, 155, 43, 0.9), 0 0 20px rgba(93, 155, 43, 0.4);
+    }
+
+    .intro-orbit.o2 .intro-cube {
+      background: var(--diamond);
+      box-shadow: 0 0 10px rgba(44, 185, 170, 0.9), 0 0 20px rgba(44, 185, 170, 0.4);
+    }
+
+    /* ========== TITLE ========== */
+    .intro-title {
+      font-size: clamp(18px, 4vw, 28px);
+      line-height: 1.6;
+      letter-spacing: 0.06em;
+      opacity: 0;
+    }
+
+    #intro.go .intro-title {
+      opacity: 1;
+    }
+
+    .intro-title .iw {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(24px) scale(0.8);
+      transition: opacity 0.5s ease, transform 0.5s var(--ease-spring);
+    }
+
+    .intro-title.go .iw {
+      opacity: 1;
+      transform: none;
+    }
+
+    .intro-title .iw.w {
+      color: #fff;
+      text-shadow: 0 0 24px rgba(93, 155, 43, 0.4), 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-title .iw.g {
+      background: var(--grad);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmer 4s linear infinite;
+    }
+
+    /* ========== SUBTITLE ========== */
+    .intro-sub {
+      margin-top: 18px;
+      font-size: 20px;
+      color: var(--text-secondary);
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s;
+    }
+
+    #intro.go .intro-sub {
+      opacity: 1;
+      transform: none;
+    }
+
+    .intro-sub b {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-weight: 700;
+    }
+
+    /* ========== SKIP BTN ========== */
+    .intro-skip {
+      position: absolute;
+      z-index: 7;
+      bottom: 24px;
+      right: 28px;
+      font-size: 9px;
+      color: var(--text-tertiary);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: color 0.3s, background 0.3s, border-color 0.3s, transform 0.2s;
+      box-shadow: var(--mc-inner);
+      opacity: 0;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    #intro.go .intro-skip {
+      animation: fadeIn 0.5s ease 1.2s both;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .intro-skip:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    @keyframes shimmer {
+      to {
+        background-position: -200% center;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #intro {
+        display: none;
+      }
+    }
+
+    /* ============================
+   NAV
+   ============================ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: rgba(13, 11, 9, 0.82);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 2px solid var(--border);
+      transition: background 0.4s var(--ease), border-color 0.3s;
+    }
+
+    [data-theme="light"] nav {
+      background: rgba(232, 228, 223, 0.82);
+    }
+
+    .nav-inner {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      transition: opacity 0.2s;
+      user-select: none;
+      font-family: "Press Start 2P", monospace;
+      letter-spacing: 0.05em;
+    }
+
+    .logo:active {
+      opacity: 0.8;
+    }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--grad);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: var(--shadow-sm), 0 0 12px var(--accent-glow), var(--mc-inner);
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.3s;
+    }
+
+    .logo:hover .logo-mark {
+      transform: rotate(-6deg) scale(1.06);
+      box-shadow: var(--shadow-md), 0 0 20px var(--accent-glow);
+    }
+
+    .logo b {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      align-items: center;
+    }
+
+    .nav-links a {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      transition: color 0.2s, background 0.2s;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    .nav-back {
+      font-size: 14px;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      transition: color 0.2s, background 0.2s;
+      font-weight: 500;
+    }
+
+    .nav-back:hover {
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    .nav-back svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .nav-cta {
+      background: var(--grad);
+      color: #fff !important;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 9px 18px;
+      box-shadow: var(--shadow-sm), var(--mc-inner);
+      transition: box-shadow 0.3s, transform 0.25s var(--ease-spring);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .nav-cta:hover {
+      box-shadow: var(--shadow-md), 0 0 16px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .nav-cta:active {
+      transform: scale(0.97);
+    }
+
+    @media (max-width: 700px) {
+      .nav-links .hide-mobile {
+        display: none;
+      }
+    }
+
+    /* ============================
+   THEME TOGGLE
+   ============================ */
+    .theme-toggle {
+      width: 42px;
+      height: 22px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border);
+      background: var(--surface-hover);
+      cursor: pointer;
+      position: relative;
+      transition: background 0.3s var(--ease);
+      flex-shrink: 0;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: var(--mc-inner);
+    }
+
+    .theme-toggle:hover {
+      background: var(--border-hover);
+    }
+
+    .theme-toggle:focus-visible {
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 0;
+      background: var(--text-tertiary);
+      transition: transform 0.35s var(--ease-spring), background 0.3s var(--ease);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    [data-theme="light"] .toggle-thumb {
+      transform: translateX(20px);
+      background: #F59E0B;
+    }
+
+    .toggle-moon,
+    .toggle-sun {
+      position: absolute;
+      transition: opacity 0.25s, transform 0.35s var(--ease-spring);
+    }
+
+    .toggle-moon {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: transparent;
+      box-shadow: inset -3px 0.5px 0 0 var(--bg);
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    [data-theme="light"] .toggle-moon {
+      opacity: 0;
+      transform: scale(0.3) rotate(-60deg);
+    }
+
+    .toggle-sun {
+      width: 6px;
+      height: 6px;
+      border-radius: 0;
+      background: #FBBF24;
+      box-shadow: 0 0 4px rgba(251, 191, 36, 0.6);
+      opacity: 0;
+      transform: scale(0.3);
+    }
+
+    [data-theme="light"] .toggle-sun {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    html:not([data-theme]) .toggle-sun {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+
+    /* ============================
+   VIEW TRANSITIONS
+   ============================ */
+    #view-home,
+    #view-home,
+    #view-mod,
+    #view-versions,
+    #view-download {
+      transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+      will-change: opacity, transform;
+    }
+
+    .slide-out {
+      opacity: 0;
+      transform: scale(0.97) translateY(8px);
+      pointer-events: none;
+    }
+
+    .slide-in {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    /* IMPORTANT: Every mod view ID MUST be listed here.
+       If you add a new mod, add: #view-mod-XX.hidden, #view-versions-XX.hidden,
+       #view-download-XX.hidden — otherwise the view stays visible and breaks layout. */
+    #view-home.hidden,
+    #view-mod.hidden,
+    #view-versions.hidden,
+    #view-download.hidden {
+      display: none;
+    }
+
+    /* ===== TRANSITION OVERLAY – SAME FOR BOTH ===== */
+    .transition-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s var(--ease);
+    }
+
+    .transition-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .transition-mod {
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .transition-mod::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(93, 155, 43, 0.12), rgba(44, 185, 170, 0.1), transparent 60%);
+    }
+
+    .transition-mod .t-logo {
+      width: 64px;
+      height: 64px;
+      background: var(--grad);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      font-family: "Press Start 2P", monospace;
+      box-shadow: 0 0 40px var(--accent-glow), var(--shadow-lg), var(--mc-inner);
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      transform: scale(0.6);
+      opacity: 0;
+    }
+
+    .transition-mod.active .t-logo {
+      animation: tPulse 0.6s var(--ease) forwards;
+    }
+
+    .transition-mod .t-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 0;
+      background: var(--grad-grass);
+    }
+
+    .transition-mod.active .t-bar {
+      animation: tBar 0.8s var(--ease) 0.05s forwards;
+    }
+
+    .transition-mod .t-sweep {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(93, 155, 43, 0.08) 50%, transparent 100%);
+      transform: translateX(-100%);
+    }
+
+    .transition-mod.active .t-sweep {
+      animation: tSweep 0.8s var(--ease) forwards;
+    }
+
+    @keyframes tPulse {
+      from {
+        transform: scale(0.6);
+        opacity: 0
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+
+    @keyframes tBar {
+      from {
+        width: 0
+      }
+
+      to {
+        width: 100%
+      }
+    }
+
+    @keyframes tSweep {
+      from {
+        transform: translateX(-100%)
+      }
+
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    /* ============================
+   HERO (Home)
+   ============================ */
+    .hero {
+      padding: 80px 0 24px;
+      text-align: center;
+    }
+
+    .hero-el {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s var(--ease), transform 0.7s var(--ease-spring);
+    }
+
+    body.site-in .hero-el {
+      opacity: 1;
+      transform: none;
+    }
+
+    body.site-in .hero-el:nth-child(1) {
+      transition-delay: 0.04s;
+    }
+
+    body.site-in .hero-el:nth-child(2) {
+      transition-delay: 0.12s;
+    }
+
+    body.site-in .hero-el:nth-child(3) {
+      transition-delay: 0.22s;
+    }
+
+    body.site-in .hero-el:nth-child(4) {
+      transition-delay: 0.32s;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      border: 2px solid var(--border);
+      padding: 8px 18px;
+      background: var(--surface);
+      transition: border-color 0.25s;
+      box-shadow: var(--mc-inner);
+    }
+
+    .hero-badge:hover {
+      border-color: var(--border-hover);
+    }
+
+    .hero-badge b {
+      color: var(--grass);
+      font-weight: 700;
+    }
+
+    .hero h1 {
+      margin-top: 24px;
+      font-size: clamp(40px, 7vw, 72px);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+      background: linear-gradient(135deg, var(--text) 0%, var(--grass) 25%, var(--diamond) 50%, var(--gold) 75%, var(--text) 100%);
+      background-size: 250% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmer 8s linear infinite;
+      font-family: "Press Start 2P", monospace;
+    }
+
+    .hero .subline {
+      max-width: 620px;
+      margin: 24px auto 0;
+      font-size: clamp(19px, 2.5vw, 24px);
+      color: var(--text-secondary);
+      line-height: 1.55;
+      font-weight: 400;
+    }
+
+    .hero .subline b {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-weight: 700;
+    }
+
+    /* ============================
+   INFO CARDS – Home About Section
+   ============================ */
+    .info-section {
+      padding: 52px 0 40px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .info-card {
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 2px solid var(--border);
+      padding: 36px 28px;
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.3s, border-color 0.3s;
+      box-shadow: var(--mc-inner);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .info-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-hover);
+    }
+
+    .info-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .info-card:nth-child(1)::before {
+      background: var(--grad-grass);
+    }
+
+    .info-card:nth-child(2)::before {
+      background: var(--grad-diamond);
+    }
+
+    .info-card:nth-child(3)::before {
+      background: var(--grad-gold);
+    }
+
+    .info-card-icon {
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+      border: 2px solid var(--border);
+      box-shadow: var(--mc-inner);
+      transition: transform 0.3s var(--ease-spring);
+    }
+
+    .info-card:hover .info-card-icon {
+      transform: scale(1.08) rotate(-3deg);
+    }
+
+    .info-card-icon.grass-icon {
+      background: var(--grad-grass);
+      color: #fff;
+      border-color: var(--grass-dark);
+    }
+
+    .info-card-icon.diamond-icon {
+      background: var(--grad-diamond);
+      color: #fff;
+      border-color: var(--diamond-dark);
+    }
+
+    .info-card-icon.gold-icon {
+      background: var(--grad-gold);
+      color: #fff;
+      border-color: var(--gold-dark);
+    }
+
+    .info-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .info-card p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ============================
+   FEATURES STRIP – Home
+   ============================ */
+    .features-strip {
+      padding: 40px 0;
+    }
+
+    .features-inner {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .feature-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      border: 2px solid var(--border);
+      background: var(--surface);
+      padding: 10px 20px;
+      transition: border-color 0.25s, color 0.25s, transform 0.2s;
+      box-shadow: var(--mc-inner);
+      font-weight: 500;
+    }
+
+    .feature-chip:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .feature-chip .fc-dot {
+      width: 10px;
+      height: 10px;
+      flex-shrink: 0;
+    }
+
+    .feature-chip .fc-dot.c1 {
+      background: var(--grass);
+    }
+
+    .feature-chip .fc-dot.c2 {
+      background: var(--diamond);
+    }
+
+    .feature-chip .fc-dot.c3 {
+      background: var(--gold);
+    }
+
+    .feature-chip .fc-dot.c4 {
+      background: var(--redstone);
+    }
+
+    .feature-chip .fc-dot.c5 {
+      background: var(--ender);
+    }
+
+    .feature-chip .fc-dot.c6 {
+      background: var(--emerald);
+    }
+
+    /* ============================
+   DIVIDER – SEPARATOR
+   ============================ */
+    .mc-divider {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      height: 1px;
+    }
+
+    .mc-divider::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      top: 0;
+      height: 2px;
+      background: var(--border);
+    }
+
+    .mc-divider::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: -3px;
+      width: 8px;
+      height: 8px;
+      transform: translateX(-50%) rotate(45deg);
+      background: var(--grad);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    /* ============================
+   MODS GRID (Home)
+   ============================ */
+    .mods-section {
+      padding: 56px 0 40px;
+    }
+
+    .section-head {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      padding: 6px 14px;
+      margin-bottom: 16px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      box-shadow: var(--mc-inner);
+    }
+
+    .section-title {
+      font-size: clamp(26px, 4vw, 34px);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      display: inline-block;
+      position: relative;
+      padding-bottom: 12px;
+      font-family: "Press Start 2P", monospace;
+      line-height: 1.6;
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: unset;
+    }
+
+    .section-title::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 3px;
+      background: var(--grad-grass);
+    }
+
+    .section-sub {
+      max-width: 540px;
+      margin: 16px auto 0;
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .mods-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .mod-card {
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease), border-color 0.35s;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--mc-inner);
+    }
+
+    .mod-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--border-hover);
+    }
+
+    .mod-card:active {
+      transform: translateY(-2px) scale(0.995);
+      transition-duration: 0.12s;
+    }
+
+    .mod-card-inner {
+      height: 100%;
+      position: relative;
+    }
+
+    .mod-banner {
+      width: 100%;
+      aspect-ratio: 16/9;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mod-banner-bg {
+      position: absolute;
+      inset: 0;
+      transition: transform 0.5s var(--ease);
+    }
+
+    .mod-card:hover .mod-banner-bg {
+      transform: scale(1.04);
+    }
+
+    /* =================================================================
+       MOD-SPECIFIC BANNER STYLES
+       =================================================================
+       Each mod needs 3 CSS rules with a unique short ID (e.g. "ycoord", "xx").
+       The ID is used in the HTML: .mod-banner-bg.ID and .mod-banner-icon.ID.
+
+       RULES TO ADD PER MOD:
+         .mod-banner-bg.UNIQUE_ID          { background: ... }   (dark theme)
+         [data-theme="light"]
+           .mod-banner-bg.UNIQUE_ID        { background: ... }   (light theme)
+         .mod-banner-icon.UNIQUE_ID        { background: ... }   (icon gradient)
+
+       Available CSS gradient variables:
+         --grad-grass (green), --grad-warm (gold/brown), --grad-diamond (teal),
+         --grad-ender (purple), --grad-redstone (red), --grad-gold (yellow),
+         --grad-stone (grey), --grad-dirt (brown)
+       ================================================================= */
+
+    /* --- YCOORD MOD: HUD theme (diamond + grass) --- */
+    .mod-banner-bg.ycoord {
+      background: radial-gradient(circle at 70% 30%, rgba(44, 185, 170, 0.4), transparent 60%), radial-gradient(circle at 25% 75%, rgba(93, 155, 43, 0.3), transparent 55%), linear-gradient(135deg, #0D0B09, #15120E);
+    }
+
+    [data-theme="light"] .mod-banner-bg.ycoord {
+      background: radial-gradient(circle at 70% 30%, rgba(61, 122, 24, 0.2), transparent 60%), radial-gradient(circle at 25% 75%, rgba(44, 185, 170, 0.15), transparent 55%), linear-gradient(135deg, #D5E8D0, #C8DDD8);
+    }
+
+    .mod-banner-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), var(--mc-inner);
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      transition: transform 0.4s var(--ease-spring);
+      font-family: "Press Start 2P", monospace;
+    }
+
+    .mod-card:hover .mod-banner-icon {
+      transform: translate(-50%, -50%) scale(1.08) rotate(-4deg);
+    }
+
+    .mod-banner-icon.ycoord {
+      background: var(--grad-grass);
+    }
+
+    .mod-banner-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      backdrop-filter: blur(8px);
+    }
+
+    [data-theme="light"] .mod-banner-tag {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: #2C2520;
+    }
+
+    .mod-banner-version {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(0, 0, 0, 0.5);
+      padding: 3px 9px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      font-weight: 500;
+    }
+
+    [data-theme="light"] .mod-banner-version {
+      background: rgba(255, 255, 255, 0.7);
+      color: #2C2520;
+    }
+
+    .mod-info {
+      padding: 24px 24px 28px;
+    }
+
+    .mod-info h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+      transition: color 0.25s;
+    }
+
+    .mod-card:hover .mod-info h3 {
+      color: var(--grass);
+    }
+
+    .mod-info p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+
+    .mod-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mod-chip {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      border: 2px solid var(--border);
+      background: var(--surface);
+      padding: 5px 11px;
+      transition: border-color 0.2s, color 0.2s;
+      font-weight: 500;
+    }
+
+    .mod-card:hover .mod-chip {
+      border-color: var(--border-hover);
+      color: var(--text-secondary);
+    }
+
+    .mod-chip b {
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .mod-versions-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    .mod-vp-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .mod-vp-item {
+      display: inline-block;
+      padding: 2px 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 12px;
+      color: var(--diamond);
+      font-weight: 600;
+    }
+
+    .mod-arrow {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      color: var(--text-tertiary);
+      transition: background 0.25s, color 0.25s, transform 0.35s var(--ease-spring), border-color 0.25s;
+    }
+
+    .mod-card:hover .mod-arrow {
+      background: var(--grad-grass);
+      color: #fff;
+      border-color: transparent;
+      transform: translateX(3px);
+    }
+
+    .mod-arrow svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Coming Soon */
+    .coming-soon-wrap {
+      padding: 0 0 80px;
+    }
+
+    .coming-soon {
+      border-radius: var(--radius);
+      max-width: var(--maxw);
+      margin: 0 auto;
+      border: 2px dashed var(--border);
+      background: var(--surface);
+      transition: border-color 0.3s;
+      box-shadow: var(--mc-inner);
+    }
+
+    .coming-soon:hover {
+      border-color: var(--border-hover);
+    }
+
+    .coming-soon-inner {
+      padding: 52px 24px;
+      text-align: center;
+    }
+
+    .coming-soon-icon {
+      font-size: 40px;
+      margin-bottom: 14px;
+      opacity: 0.5;
+      transition: transform 0.4s var(--ease-spring), opacity 0.3s;
+    }
+
+    .coming-soon:hover .coming-soon-icon {
+      transform: scale(1.1) rotate(-5deg);
+      opacity: 0.7;
+    }
+
+    .coming-soon h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .coming-soon p {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 460px;
+      margin: 0 auto;
+      line-height: 1.55;
+    }
+
+    /* ============================
+   MOD DETAIL
+   ============================ */
+    .mod-hero {
+      padding: 52px 0 8px;
+    }
+
+    .mod-hero-inner {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin-bottom: 20px;
+    }
+
+    .mod-hero-left {
+      flex: 1;
+      text-align: left;
+    }
+
+    .mod-hero-left h1 {
+      margin-top: 20px;
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      font-family: "Press Start 2P", monospace;
+      line-height: 1.4;
+    }
+
+    .mod-hero .subline {
+      max-width: 560px;
+      margin: 18px 0 0;
+      font-size: clamp(17px, 2vw, 20px);
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .mod-hero .subline b {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-weight: 700;
+    }
+
+    .mod-hero-right {
+      flex-shrink: 0;
+    }
+
+    .mod-icon-placeholder {
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid var(--border);
+      background: var(--surface);
+      color: var(--text-tertiary);
+      box-shadow: var(--mc-inner);
+    }
+
+    .mod-icon-placeholder svg {
+      width: 56px;
+      height: 56px;
+    }
+
+    /* Buttons */
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      font-size: 17px;
+      font-weight: 600;
+      transition: transform 0.25s var(--ease-spring), box-shadow 0.25s, background 0.25s;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--grad-grass);
+      color: #fff;
+      box-shadow: var(--shadow-md), var(--mc-inner);
+      border: 2px solid var(--grass-dark);
+    }
+
+    .btn-primary:hover {
+      box-shadow: var(--shadow-lg), 0 0 24px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: var(--surface);
+      border: 2px solid var(--border);
+      box-shadow: var(--mc-inner);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+
+    [data-theme="light"] .btn-secondary {
+      background: #F0EBE4;
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+
+    [data-theme="light"] .btn-secondary:hover {
+      background: #F5F1EC;
+      border-color: rgba(0, 0, 0, 0.18);
+    }
+
+    .hero-facts {
+      display: flex;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .fact-chip {
+      font-size: 14px;
+      color: var(--text-secondary);
+      border: 2px solid var(--border);
+      background: var(--surface);
+      padding: 9px 16px;
+      transition: border-color 0.25s, background 0.25s;
+      font-weight: 500;
+      box-shadow: var(--mc-inner);
+    }
+
+    .fact-chip:hover {
+      border-color: var(--border-hover);
+      background: var(--surface-hover);
+    }
+
+    .fact-chip b {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Preview */
+    .preview {
+      margin: 40px auto 0;
+      max-width: 720px;
+      position: relative;
+    }
+
+    .preview-glow {
+      position: absolute;
+      inset: -20px -12px;
+      z-index: -1;
+      background: conic-gradient(from 90deg, rgba(93, 155, 43, 0.4), rgba(44, 185, 170, 0.4), rgba(252, 219, 5, 0.3), rgba(139, 105, 20, 0.4), rgba(93, 155, 43, 0.4));
+      filter: blur(50px);
+      border-radius: 0;
+      opacity: 0.4;
+      animation: spinGlow 20s linear infinite;
+    }
+
+    [data-theme="light"] .preview-glow {
+      opacity: 0.2;
+    }
+
+    @keyframes spinGlow {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .preview-frame {
+      overflow: hidden;
+      position: relative;
+      border: 3px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), var(--mc-inner);
+      aspect-ratio: 16/9;
+      background: radial-gradient(circle at 70% 30%, rgba(93, 155, 43, 0.15), transparent 55%), radial-gradient(circle at 25% 75%, rgba(44, 185, 170, 0.12), transparent 55%), linear-gradient(180deg, #0D0B09, #15120E);
+    }
+
+    [data-theme="light"] .preview-frame {
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.1);
+      border-color: rgba(0, 0, 0, 0.08);
+      background: radial-gradient(circle at 70% 30%, rgba(93, 155, 43, 0.1), transparent 55%), radial-gradient(circle at 25% 75%, rgba(44, 185, 170, 0.08), transparent 55%), linear-gradient(180deg, #E8E4DF, #DDD8D0);
+    }
+
+    .ycoord-hud {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 2;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.55);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: var(--mc-inner);
+      font-family: "Press Start 2P", monospace;
+    }
+
+    [data-theme="light"] .ycoord-hud {
+      background: rgba(255, 255, 255, 0.75);
+      color: #2C2520;
+      text-shadow: none;
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .ycoord-hud b {
+      color: var(--diamond);
+    }
+
+    [data-theme="light"] .ycoord-hud b {
+      color: var(--accent);
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+    }
+
+    .stat {
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 2px solid var(--border);
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.3s, border-color 0.3s;
+      box-shadow: var(--mc-inner);
+    }
+
+    .stat:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-hover);
+    }
+
+    .stat-inner {
+      padding: 28px 14px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      transition: transform 0.3s var(--ease-spring);
+      display: inline-block;
+      font-family: "Press Start 2P", monospace;
+    }
+
+    .stat:hover .stat-value {
+      transform: scale(1.05);
+    }
+
+    .sv-1 {
+      background: var(--grad-grass);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .sv-2 {
+      background: var(--grad-diamond);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .sv-3 {
+      background: var(--grad-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .sv-4 {
+      background: var(--grad-dirt);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat-label {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    /* Feature Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 2px solid var(--border);
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.3s, border-color 0.3s;
+      position: relative;
+      box-shadow: var(--mc-inner);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-hover);
+    }
+
+    .card-inner {
+      padding: 28px 24px;
+      height: 100%;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), var(--mc-inner);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      transition: transform 0.35s var(--ease-spring);
+    }
+
+    .card:hover .card-icon {
+      transform: scale(1.08) rotate(-3deg);
+    }
+
+    .card-icon svg {
+      width: 22px;
+      height: 22px;
+      color: #fff;
+    }
+
+    .card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+      transition: color 0.25s;
+    }
+
+    .card:hover h3 {
+      color: var(--grass);
+    }
+
+    .card p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* Requirements Table */
+    .req {
+      max-width: 660px;
+      margin: 0 auto;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      box-shadow: var(--mc-inner);
+    }
+
+    .req-inner {
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 17px;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 16px 24px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fff;
+      background: var(--grad-grass);
+      border-bottom: none;
+      font-weight: 600;
+    }
+
+    tbody td {
+      padding: 14px 24px;
+      border-bottom: 2px solid var(--border);
+      background: var(--card);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr {
+      transition: background 0.2s;
+    }
+
+    tbody tr:hover {
+      background: var(--surface-hover);
+    }
+
+    td:first-child {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    td:last-child {
+      color: var(--text);
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      padding: 4px 10px;
+      color: #fff;
+      background: var(--grad-grass);
+    }
+
+    /* Steps */
+    .steps {
+      max-width: 620px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .step {
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 2px solid var(--border);
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.3s, border-color 0.3s;
+      box-shadow: var(--mc-inner);
+    }
+
+    .step:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+      border-color: var(--border-hover);
+    }
+
+    .step-inner {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      padding: 24px;
+    }
+
+    .step-num {
+      flex: 0 0 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      background: var(--grad-grass);
+      box-shadow: 0 3px 10px var(--accent-glow), var(--mc-inner);
+      border: 2px solid var(--grass-dark);
+      transition: transform 0.3s var(--ease-spring);
+      font-family: "Press Start 2P", monospace;
+    }
+
+    .step:hover .step-num {
+      transform: scale(1.08) rotate(-4deg);
+    }
+
+    .step h4 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .step p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .drive-tip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--accent-light);
+      background: var(--surface);
+      border: 2px solid var(--border);
+      padding: 8px 14px;
+      font-weight: 500;
+      box-shadow: var(--mc-inner);
+    }
+
+    [data-theme="light"] .drive-tip {
+      color: var(--accent);
+      background: rgba(61, 122, 24, 0.06);
+      border-color: rgba(61, 122, 24, 0.2);
+    }
+
+    .drive-arrow {
+      width: 14px;
+      height: 14px;
+      color: var(--grass);
+      animation: arrowBob 1.6s ease-in-out infinite;
+    }
+
+    @keyframes arrowBob {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(3px)
+      }
+    }
+
+    .code-path {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      padding: 6px 11px;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      box-shadow: var(--mc-inner);
+    }
+
+    .copy-btn {
+      background: var(--grad-grass);
+      border: 2px solid var(--grass-dark);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.2s var(--ease-spring), box-shadow 0.2s;
+      box-shadow: var(--mc-inner);
+    }
+
+    .copy-btn:hover {
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    .copy-btn:active {
+      transform: scale(0.92);
+    }
+
+    .copy-btn.copied {
+      background: var(--emerald);
+      border-color: #12B850;
+    }
+
+    /* FAQ */
+    .faq {
+      max-width: 660px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .faq-item {
+      overflow: hidden;
+      border: 2px solid var(--border);
+      background: var(--card);
+      transition: border-color 0.25s, box-shadow 0.25s;
+      box-shadow: var(--mc-inner);
+    }
+
+    .faq-item:hover {
+      border-color: var(--border-hover);
+    }
+
+    .faq-item.open {
+      box-shadow: var(--shadow-sm);
+    }
+
+    .faq-q {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 20px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .faq-q:hover {
+      color: var(--grass);
+    }
+
+    .faq-icon {
+      flex: 0 0 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--text-tertiary);
+      transition: transform 0.3s var(--ease-spring), color 0.25s;
+    }
+
+    .faq-item.open .faq-icon {
+      transform: rotate(45deg);
+      color: var(--grass);
+    }
+
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s var(--ease);
+    }
+
+    .faq-a-inner {
+      padding: 0 20px 18px;
+      font-size: 17px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* CTA */
+    .cta-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 2px;
+      background: var(--grad-full);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-wrap::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.12), transparent 30%);
+      animation: spin 6s linear infinite;
+    }
+
+    .cta-inner {
+      padding: 60px 28px;
+      text-align: center;
+      background: var(--bg);
+      position: relative;
+      transition: background 0.4s var(--ease);
+    }
+
+    .cta-inner h2 {
+      font-size: clamp(24px, 4vw, 34px);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      display: inline-block;
+      position: relative;
+      padding-bottom: 12px;
+      background: var(--grad);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmer 6s linear infinite;
+      line-height: 1.4;
+    }
+
+    .cta-inner h2::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 44px;
+      height: 3px;
+      background: var(--grad-grass);
+    }
+
+    .cta-inner p {
+      max-width: 460px;
+      margin: 16px auto 0;
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .cta-inner .btn {
+      margin-top: 26px;
+    }
+
+    .cta-note {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 32px;
+      border-top: 2px solid var(--border);
+      transition: border-color 0.3s;
+    }
+
+    .footer-inner {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    .footer-brand b {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-weight: 700;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-links a {
+      transition: color 0.2s;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    /* ============================
+   REVEAL ANIMATIONS
+   ============================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s var(--ease), transform 0.7s var(--ease-spring);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    .stagger>.reveal:nth-child(1) {
+      transition-delay: 0s;
+    }
+
+    .stagger>.reveal:nth-child(2) {
+      transition-delay: 0.06s;
+    }
+
+    .stagger>.reveal:nth-child(3) {
+      transition-delay: 0.12s;
+    }
+
+    .stagger>.reveal:nth-child(4) {
+      transition-delay: 0.18s;
+    }
+
+    .stagger>.reveal:nth-child(5) {
+      transition-delay: 0.24s;
+    }
+
+    .stagger>.reveal:nth-child(6) {
+      transition-delay: 0.3s;
+    }
+
+    section {
+      padding: 72px 0;
+    }
+
+    section.pt0 {
+      padding-top: 0;
+    }
+
+    /* ============================
+   STANDALONE PAGES (Versions, Download)
+   ============================ */
+    .standalone-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .standalone-page .container {
+      max-width: 680px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Versions page background */
+    .versions-page-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: var(--surface);
+    }
+
+    [data-theme="light"] .versions-page-bg {
+      background: #f5f3ef;
+    }
+
+    [data-theme="light"] .versions-page-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(93, 155, 43, 0.06), transparent 50%),
+        radial-gradient(ellipse at 80% 60%, rgba(44, 185, 170, 0.05), transparent 50%);
+    }
+
+    .versions-page-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(93, 155, 43, 0.08), transparent 50%),
+        radial-gradient(ellipse at 80% 60%, rgba(44, 185, 170, 0.06), transparent 50%);
+    }
+
+    .versions-content {
+      padding: 130px 0 80px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .standalone-header {
+      text-align: center;
+      margin: 40px 0 48px;
+    }
+
+    .standalone-title {
+      font-size: clamp(28px, 4vw, 36px);
+      margin-bottom: 14px;
+    }
+
+    .standalone-sub {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 460px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .badge-light {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    /* ============================
+   VERSIONS LIST
+   ============================ */
+    .versions-list {
+      max-width: 660px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .version-item {
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 2px solid var(--border);
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.3s, border-color 0.3s;
+      box-shadow: var(--mc-inner);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+    }
+
+    .version-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-hover);
+    }
+
+    .version-item:active {
+      transform: scale(0.99);
+    }
+
+    .version-item-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .version-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text-tertiary);
+      white-space: nowrap;
+    }
+
+    .version-tag.newest {
+      background: var(--grad-grass);
+      color: #fff;
+      border-color: var(--grass-dark);
+    }
+
+    .version-info h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .version-info p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .version-arrow {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+      transition: background 0.25s, color 0.25s, transform 0.3s var(--ease-spring), border-color 0.25s;
+    }
+
+    .version-item:hover .version-arrow {
+      background: var(--grad-grass);
+      color: #fff;
+      border-color: transparent;
+      transform: translateX(3px);
+    }
+
+    .version-arrow svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .version-empty {
+      text-align: center;
+      padding: 32px 24px;
+      border: 2px dashed var(--border);
+      background: var(--surface);
+    }
+
+    .version-empty p {
+      font-size: 16px;
+      color: var(--text-tertiary);
+    }
+
+    /* ============================
+   DOWNLOAD PAGE
+   ============================ */
+    #view-download {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .download-page {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .download-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .download-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 40%, rgba(93, 155, 43, 0.15), transparent 60%),
+        radial-gradient(ellipse at 30% 70%, rgba(44, 185, 170, 0.12), transparent 55%),
+        radial-gradient(ellipse at 70% 60%, rgba(252, 219, 5, 0.08), transparent 50%);
+    }
+
+    .download-orb {
+      position: absolute;
+      border-radius: 0;
+      filter: blur(80px);
+      opacity: 0.25;
+    }
+
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      left: -100px;
+      top: 10%;
+      background: var(--grass);
+      animation: drift1 20s ease-in-out infinite alternate;
+    }
+
+    .orb-2 {
+      width: 350px;
+      height: 350px;
+      right: -80px;
+      top: 30%;
+      background: var(--diamond);
+      animation: drift2 24s ease-in-out infinite alternate;
+    }
+
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      left: 40%;
+      bottom: -100px;
+      background: var(--gold);
+      animation: drift3 28s ease-in-out infinite alternate;
+    }
+
+    [data-theme="light"] .download-orb {
+      opacity: 0.12;
+    }
+
+    [data-theme="light"] .download-page .download-bg {
+      background: linear-gradient(135deg, #f0f7e8 0%, #E8E4DF 30%, #f0f0f8 60%, #E8E4DF 100%);
+    }
+
+    [data-theme="light"] .download-page .download-bg::before {
+      background: radial-gradient(ellipse at 50% 40%, rgba(93, 155, 43, 0.08), transparent 60%),
+        radial-gradient(ellipse at 30% 70%, rgba(44, 185, 170, 0.06), transparent 55%),
+        radial-gradient(ellipse at 70% 60%, rgba(252, 219, 5, 0.05), transparent 50%);
+    }
+
+    [data-theme="light"] .download-note {
+      color: rgba(0, 0, 0, 0.4);
+    }
+
+    [data-theme="light"] .download-sub {
+      color: rgba(0, 0, 0, 0.55);
+    }
+
+    [data-theme="light"] .back-link-light {
+      color: rgba(0, 0, 0, 0.45);
+      border-color: rgba(0, 0, 0, 0.12);
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="light"] .back-link-light:hover {
+      color: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.08);
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .download-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .download-header {
+      margin-bottom: 12px;
+    }
+
+    .download-title {
+      margin-top: 20px;
+    }
+
+    .download-content .download-sub {
+      max-width: 480px;
+      margin: 14px auto 0;
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+    }
+
+    /* Download page staggered fade-in */
+    #view-download .back-link {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    #view-download .badge-light {
+      opacity: 0;
+      transform: translateY(16px) scale(0.9);
+    }
+
+    #view-download .download-title {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    #view-download .download-sub {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    #view-download .download-btn-wrap {
+      opacity: 0;
+      transform: translateY(24px) scale(0.95);
+    }
+
+    #view-download .download-note {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    #view-download:not(.hidden) .back-link {
+      animation: dlFadeIn 0.5s var(--ease) 0.1s forwards;
+    }
+
+    #view-download:not(.hidden) .badge-light {
+      animation: dlFadeIn 0.55s var(--ease) 0.25s forwards;
+    }
+
+    #view-download:not(.hidden) .download-title {
+      animation: dlFadeIn 0.6s var(--ease) 0.4s forwards;
+    }
+
+    #view-download:not(.hidden) .download-sub {
+      animation: dlFadeIn 0.5s var(--ease) 0.55s forwards;
+    }
+
+    #view-download:not(.hidden) .download-btn-wrap {
+      animation: dlBtnIn 0.7s var(--ease-spring) 0.7s forwards;
+    }
+
+    #view-download:not(.hidden) .download-note {
+      animation: dlFadeIn 0.5s var(--ease) 0.95s forwards;
+    }
+
+    @keyframes dlFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes dlBtnIn {
+      from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Animated Download Button */
+    .download-btn-wrap {
+      margin-top: 40px;
+    }
+
+    .download-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 48px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      overflow: hidden;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(93, 155, 43, 0.4), var(--mc-inner);
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.3s;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 48px rgba(93, 155, 43, 0.5), 0 0 40px rgba(44, 185, 170, 0.3);
+    }
+
+    .download-btn:active {
+      transform: scale(0.97);
+    }
+
+    .download-btn-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--grass), var(--diamond), var(--gold));
+      background-size: 300% 300%;
+      animation: downloadShift 4s ease-in-out infinite;
+    }
+
+    .download-btn::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(135deg, var(--grass), var(--diamond), var(--gold), var(--grass));
+      background-size: 400% 400%;
+      animation: downloadBorder 3s linear infinite;
+      z-index: -1;
+    }
+
+    @keyframes downloadShift {
+
+      0%,
+      100% {
+        background-position: 0% 50%
+      }
+
+      50% {
+        background-position: 100% 50%
+      }
+    }
+
+    @keyframes downloadBorder {
+      0% {
+        background-position: 0% 50%
+      }
+
+      100% {
+        background-position: 400% 50%
+      }
+    }
+
+    .download-btn-text {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .download-icon {
+      width: 22px;
+      height: 22px;
+      animation: downloadBounce 1.5s ease-in-out infinite;
+    }
+
+    @keyframes downloadBounce {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(3px)
+      }
+    }
+
+    .download-note {
+      margin-top: 16px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Back links */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--text-tertiary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px 14px;
+      margin-bottom: 20px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+      font-family: inherit;
+      font-weight: 500;
+      box-shadow: var(--mc-inner);
+    }
+
+    .back-link:hover {
+      color: var(--text);
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+      transform: translateX(-2px);
+    }
+
+    .back-link svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .back-link-light {
+      color: rgba(255, 255, 255, 0.5);
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .back-link-light:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    ============================*/ @media (max-width: 820px) {
+      .mod-hero {
+        padding: 40px 0 8px;
+      }
+
+      .mod-hero-inner {
+        flex-direction: column-reverse;
+        align-items: center;
+        text-align: center;
+        gap: 24px;
+      }
+
+      .mod-hero-left {
+        text-align: center;
+      }
+
+      .mod-hero .subline {
+        margin: 18px auto 0;
+      }
+
+      .cta-row {
+        justify-content: center;
+      }
+
+      .hero-facts {
+        justify-content: center;
+      }
+
+      .mod-hero-right {
+        order: -1;
+      }
+
+      .preview-glow {
+        inset: -10px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .hero {
+        padding: 48px 0 8px;
+      }
+
+      .mods-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 0 16px;
+      }
+
+      .coming-soon {
+        margin: 0 16px;
+      }
+
+      .coming-soon-inner {
+        padding: 32px 18px;
+      }
+
+      .intro-skip {
+        bottom: 16px;
+        right: 14px;
+        font-size: 8px;
+        padding: 7px 10px;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      section {
+        padding: 40px 0;
+      }
+
+      .mod-hero {
+        padding: 32px 0 8px;
+      }
+
+      .nav-inner {
+        padding: 10px 14px;
+        gap: 6px;
+      }
+
+      .logo {
+        font-size: 11px;
+        gap: 7px;
+      }
+
+      .logo-mark {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+      }
+
+      .nav-cta {
+        font-size: 13px;
+        padding: 8px 14px;
+      }
+
+      .mod-hero-inner {
+        flex-direction: column-reverse;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .mod-hero-left {
+        text-align: center;
+      }
+
+      .mod-hero-left h1 {
+        font-size: clamp(22px, 7vw, 56px);
+        margin-top: 16px;
+      }
+
+      .mod-hero .subline {
+        margin: 18px auto 0;
+      }
+
+      .mod-hero-right {
+        order: -1;
+      }
+
+      .mod-icon-placeholder {
+        width: 96px;
+        height: 96px;
+      }
+
+      .mod-icon-placeholder svg {
+        width: 44px;
+        height: 44px;
+      }
+
+      .cta-row {
+        justify-content: center;
+        flex-direction: column;
+        margin-top: 20px;
+      }
+
+      .cta-row .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .hero-facts {
+        justify-content: center;
+        margin-top: 20px;
+        gap: 8px;
+      }
+
+      .fact-chip {
+        font-size: 13px;
+        padding: 7px 12px;
+      }
+
+      .ycoord-hud {
+        top: 8px;
+        right: 8px;
+        padding: 6px 9px;
+        font-size: 10px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .stat-inner {
+        padding: 20px 8px;
+      }
+
+      .stat-value {
+        font-size: 26px;
+      }
+
+      .stat-label {
+        font-size: 13px;
+      }
+
+      .section-title {
+        font-size: clamp(18px, 5vw, 28px);
+      }
+
+      .section-sub {
+        font-size: 16px;
+      }
+
+      .section-head {
+        margin-bottom: 28px;
+      }
+
+      .eyebrow {
+        font-size: 10px;
+        padding: 5px 10px;
+        margin-bottom: 12px;
+      }
+
+      .cards {
+        gap: 10px;
+      }
+
+      .card-inner,
+      .step-inner {
+        padding: 20px 18px;
+      }
+
+      .card h3 {
+        font-size: 16px;
+      }
+
+      .card p {
+        font-size: 15px;
+      }
+
+      .step h4 {
+        font-size: 15px;
+      }
+
+      .step p {
+        font-size: 15px;
+      }
+
+      .faq-q {
+        padding: 14px 16px;
+        font-size: 15px;
+      }
+
+      .faq-a-inner {
+        padding: 0 16px 14px;
+        font-size: 15px;
+      }
+
+      .cta-inner {
+        padding: 40px 18px;
+      }
+
+      .cta-inner h2 {
+        font-size: clamp(18px, 5vw, 28px);
+      }
+
+      .cta-inner .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .footer-inner {
+        padding: 20px 14px;
+      }
+
+      .features-inner {
+        gap: 8px;
+      }
+
+      .feature-chip {
+        font-size: 13px;
+        padding: 7px 12px;
+      }
+
+      .info-card {
+        padding: 28px 22px;
+      }
+
+      .info-card h3 {
+        font-size: 18px;
+      }
+
+      .info-card p {
+        font-size: 15px;
+      }
+
+      .version-item {
+        padding: 16px 18px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .version-arrow {
+        align-self: flex-end;
+      }
+
+      .download-btn {
+        padding: 16px 36px;
+        font-size: 18px;
+      }
+
+      .versions-content {
+        padding: 110px 0 60px;
+      }
+
+      .standalone-header {
+        margin: 28px 0 32px;
+      }
+
+      .download-content {
+        padding: 0;
+      }
+
+      .download-page {
+        align-items: stretch;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .hero-el,
+      .reveal {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+
+      #view-home,
+      #view-mod,
+      #view-versions,
+      #view-download {
+        opacity: 1 !important;
+      }
+
+      #view-download .back-link,
+      #view-download .badge-light,
+      #view-download .download-title,
+      #view-download .download-sub,
+      #view-download .download-btn-wrap,
+      #view-download .download-note {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="intro-active">
+
+  <div class="progress"></div>
+
+  <div class="transition-overlay transition-mod" id="transMod">
+    <div class="t-sweep"></div>
+    <div class="t-logo pixel">Y</div>
+    <div class="t-bar"></div>
+  </div>
+
+  <div id="intro" aria-hidden="true">
+    <canvas id="introCanvas"></canvas>
+    <div class="intro-grid"></div>
+    <div class="intro-pulse"></div>
+    <div class="intro-vignette"></div>
+    <div class="intro-sweep"></div>
+    <div class="flash"></div>
+    <div class="intro-content">
+      <div class="intro-logo">
+        <div class="intro-logo-glow"></div>
+        <span class="intro-ring"></span>
+        <span class="intro-orbit o1"><span class="intro-cube"></span></span>
+        <span class="intro-orbit o2"><span class="intro-cube"></span></span>
+        <span class="intro-logo-mark">Y</span>
+      </div>
+      <h2 class="intro-title pixel"></h2>
+      <p class="intro-sub">Mods, die du für deine <b>Survival Welt</b> brauchst</p>
+    </div>
+    <button class="intro-skip pixel" id="introSkip">ÜBERSPRINGEN</button>
+  </div>
+  <noscript>
+    <style>
+      #intro {
+        display: none !important
+      }
+
+      body {
+        overflow: auto
+      }
+
+      .hero-el,
+      .reveal {
+        opacity: 1 !important;
+        transform: none !important
+      }
+    </style>
+  </noscript>
+
+  <div class="aurora">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="bg-grid"></div>
+
+  <nav>
+    <div class="nav-inner">
+      <span class="logo" onclick="showHome()"><span class="logo-mark">Y</span>Y-<b>Mod</b></span>
+      <div class="nav-links" id="navHome">
+        <a href="#about-section">Über uns</a>
+        <a href="#mods-section">Mods</a>
+        <a href="#coming-section">Demnächst</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Theme wechseln">
+          <div class="toggle-thumb">
+            <div class="toggle-moon"></div>
+            <div class="toggle-sun"></div>
+          </div>
+        </button>
+      </div>
+      <div class="nav-links" id="navMod" style="display:none;">
+        <span class="nav-back" onclick="showHome()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+          Zurück
+        </span>
+        <!-- IMPORTANT: This mod name is updated dynamically by showMod() in JS.
+             When adding a new mod, add the name to the 'names' object in showMod(). -->
+        <span class="hide-mobile" id="navModName">Y-Coordinate HUD</span>
+        <button class="theme-toggle" id="themeToggleMod" aria-label="Theme wechseln">
+          <div class="toggle-thumb">
+            <div class="toggle-moon"></div>
+            <div class="toggle-sun"></div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top">
+
+    <!-- HOME -->
+    <div id="view-home">
+      <header class="hero">
+        <div class="container">
+          <span class="badge hero-el hero-badge"><b>Minecraft</b> ab 26.2 &middot; Fabric</span>
+          <h1 class="hero-el pixel">Y-Mod</h1>
+          <p class="subline hero-el">Dein <b>Mod Center</b> für die besten selbstgebauten Mods, die du für deine
+            Survival Welt brauchst. Alle Mods ab Minecraft 26.2 — mit steigenden Versionen, sobald neue Updates kommen.
+            Klein, schnell, sofort einsatzbereit.</p>
+        </div>
+      </header>
+
+      <section class="info-section" id="about-section">
+        <div class="info-grid stagger">
+          <div class="info-card reveal">
+            <div class="info-card-icon grass-icon">&#9733;</div>
+            <h3>Selbstgemachte Mods</h3>
+            <p>Jede Mod wurde von mir entwickelt, getestet und für die Survival Welt optimiert. Keine
+              zusammengewürfelten Dinge — alles mit Bedacht gebaut.</p>
+          </div>
+          <div class="info-card reveal">
+            <div class="info-card-icon diamond-icon">&#9670;</div>
+            <h3>Perfekt für Survival</h3>
+            <p>Du brauchst keine komplexen Mods. Y-Mod bringt nur das, was du wirklich brauchst — nützlich,
+              leichtgewichtig und sofort nutzbar.</p>
+          </div>
+          <div class="info-card reveal">
+            <div class="info-card-icon gold-icon">&#9733;</div>
+            <h3>Immer aktuell</h3>
+            <p>Alle Mods starten ab Minecraft 26.2 und werden mit steigenden Versionen erweitert. Fabric-basiert,
+              kompatibel und zuverlässig.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="features-strip">
+        <div class="features-inner stagger">
+          <div class="feature-chip reveal"><span class="fc-dot c1"></span> Client-Mods</div>
+          <div class="feature-chip reveal"><span class="fc-dot c2"></span> Kein Config nötig</div>
+          <div class="feature-chip reveal"><span class="fc-dot c3"></span> Mini Dateigröße</div>
+          <div class="feature-chip reveal"><span class="fc-dot c4"></span> Sofort einsatzbereit</div>
+          <div class="feature-chip reveal"><span class="fc-dot c5"></span> Kein Server nötig</div>
+          <div class="feature-chip reveal"><span class="fc-dot c6"></span> Fabric kompatibel</div>
+        </div>
+      </div>
+
+      <div class="mc-divider"></div>
+
+      <!-- =================================================================
+           HOME PAGE – MODS GRID
+           =================================================================
+           Each mod needs a .mod-card div inside .mods-grid.
+           The onclick calls showMod('UNIQUE_ID') which routes to the detail view.
+           Copy the structure from an existing card and customize:
+             - onclick ID, banner CSS class, icon, tag, name, description
+             - mod-chips: MC version, file size, mod type
+             - mod-vp-item: each supported MC version
+           ================================================================= -->
+      <section id="mods-section" class="mods-section pt0">
+        <div class="container">
+          <div class="section-head reveal">
+            <span class="eyebrow">Must-Haves</span>
+            <h2 class="section-title pixel">Verfügbare Mods</h2>
+            <p class="section-sub">Die wichtigsten Mods für deine Survival Welt — von mir gebaut, getestet und sofort
+              einsatzbereit.</p>
+          </div>
+        </div>
+        <div class="mods-grid stagger">
+          <div class="mod-card reveal" onclick="showMod('ycoord')">
+            <div class="mod-card-inner">
+              <div class="mod-banner">
+                <div class="mod-banner-bg ycoord"></div>
+                <img class="mod-banner-icon ycoord pixel"
+                  src="https://raw.githubusercontent.com/VisionXRV/Y-Mods/f9fecaebdacb1f3754a40c7f458fa53fbabcd891/Gemini_Generated_Image_7c8q9s7c8q9s7c8q.jpg"
+                  alt="Y-Coordinate HUD" style="object-fit: cover;">
+                <span class="mod-banner-tag">HUD</span>
+                <span class="mod-banner-version">v1.0.0</span>
+              </div>
+              <div class="mod-info">
+                <h3>Y-Coordinate HUD</h3>
+                <p>Das Must-Have beim Graben und Farmen. Zeigt deine Y-Koordinate dauerhaft oben rechts im HUD an — ohne
+                  F3, ohne Konfiguration, rein client-seitig.</p>
+                <div class="mod-meta">
+                  <span class="mod-chip">MC <b>26.2</b></span>
+                  <span class="mod-chip"><b>2,7</b> KB</span>
+                  <span class="mod-chip">Client-Mod</span>
+                </div>
+                <div class="mod-versions-preview">
+                  <span class="mod-vp-label">Versionen:</span>
+                  <span class="mod-vp-item">26.2</span>
+                </div>
+              </div>
+              <div class="mod-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M5 12h14" />
+                  <path d="M12 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="coming-soon-wrap">
+        <div class="container">
+          <div class="coming-soon reveal" id="coming-section">
+            <div class="coming-soon-inner">
+              <div class="coming-soon-icon">⛏️</div>
+              <h3>Mehr Mods kommen bald</h3>
+              <p>Es werden noch mehr nützliche, kleine Mods für deine Survival Welt hinzugefügt. Jede Mod gebaut mit dem
+                gleichen Anspruch: minimal, nötig, sofort nutzbar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         VIEW: MOD DETAIL (YCOORD)
+         ================================================================
+         Each mod has its own detail view with id="view-mod-UNIQUE_ID".
+         Structure:
+           1. .mod-hero     – Badge, title, description, CTA buttons, fact chips
+           2. .mod-features – 6 feature cards with icon, title, description
+           3. .mod-installation – 4-step install guide
+           4. CTA section – bottom download call-to-action
+         onclick handlers:
+           - "Mod herunterladen" → showVersions('UNIQUE_ID')
+           - "Installationsanleitung" → href="#mod-installation-UNIQUE_ID"
+           - CTA button → showVersions('UNIQUE_ID')
+         ================================================================ -->
+    <!-- MOD: Y-COORD -->
+    <div id="view-mod" class="hidden">
+      <header class="mod-hero">
+        <div class="container">
+          <div class="mod-hero-inner">
+            <div class="mod-hero-left">
+              <span class="badge"><b>Minecraft 26.2</b> &middot; Fabric</span>
+              <h1 class="pixel">Y-Coordinate HUD</h1>
+              <p class="subline">Zeigt deine aktuelle Blockhöhe dauerhaft oben rechts im HUD an — als kleine Zahl, ohne
+                Einstellungen, rein client-seitig.</p>
+              <div class="cta-row">
+                <button class="btn btn-primary" onclick="showVersions('ycoord')">Mod herunterladen</button>
+                <a class="btn btn-secondary" href="#mod-installation">Installationsanleitung</a>
+              </div>
+              <div class="hero-facts">
+                <span class="fact-chip">Version <b>1.0.0</b></span>
+                <span class="fact-chip">Größe <b>2,7 KB</b></span>
+                <span class="fact-chip">Einstellungen <b>Keine</b></span>
+                <span class="fact-chip">Server <b>Nicht nötig</b></span>
+              </div>
+            </div>
+            <div class="mod-hero-right">
+              <div class="mod-icon-placeholder">
+                <img
+                  src="https://raw.githubusercontent.com/VisionXRV/Y-Mods/f9fecaebdacb1f3754a40c7f458fa53fbabcd891/Gemini_Generated_Image_7c8q9s7c8q9s7c8q.jpg"
+                  alt="Y-Coordinate HUD Mod Icon" style="width: 100%; height: 100%; object-fit: cover;">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </header>
+
+      <section id="mod-features">
+        <div class="container">
+          <div class="section-head reveal">
+            <span class="eyebrow">Features</span>
+            <h2 class="section-title pixel">Was die Mod macht</h2>
+            <p class="section-sub">Sechs Eigenschaften, die zählen.</p>
+          </div>
+          <div class="cards stagger">
+            <div class="card reveal">
+              <div class="card-inner">
+                <div class="card-icon" style="background:linear-gradient(135deg,var(--grass),var(--diamond));"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <circle cx="15" cy="11" r="2" />
+                    <path d="M18 8h.01" />
+                  </svg></div>
+                <h3>Oben rechts, immer da</h3>
+                <p>Die Blockhöhe (<code>getBlockY</code>) steht permanent als Zahl in der oberen rechten Ecke.</p>
+              </div>
+            </div>
+            <div class="card reveal">
+              <div class="card-inner">
+                <div class="card-icon" style="background:linear-gradient(135deg,var(--ender),var(--redstone));"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg></div>
+                <h3>Ausblenden bei F3</h3>
+                <p>Öffnest du den Debug-Bildschirm, verschwindet die Anzeige automatisch.</p>
+              </div>
+            </div>
+            <div class="card reveal">
+              <div class="card-inner">
+                <div class="card-icon" style="background:linear-gradient(135deg,var(--emerald),var(--diamond));"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="14" rx="2" />
+                    <path d="M8 21h8" />
+                    <path d="M12 18v3" />
+                  </svg></div>
+                <h3>Reine Client-Mod</h3>
+                <p>Kein Server nötig. Funktioniert auf jedem Server — auch ohne Mods.</p>
+              </div>
+            </div>
+            <div class="card reveal">
+              <div class="card-inner">
+                <div class="card-icon" style="background:linear-gradient(135deg,var(--gold),var(--dirt));"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 3v3" />
+                    <path d="M12 18v3" />
+                    <path d="M3 12h3" />
+                    <path d="M18 12h3" />
+                    <circle cx="12" cy="12" r="5" />
+                  </svg></div>
+                <h3>Keine Konfiguration</h3>
+                <p>Installieren, starten, fertig. Keine Config-Datei, keine Tasten.</p>
+              </div>
+            </div>
+            <div class="card reveal">
+              <div class="card-inner">
+                <div class="card-icon" style="background:linear-gradient(135deg,var(--lapis),var(--ender));"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 2 3 7l9 5 9-5-9-5z" />
+                    <path d="M3 12l9 5 9-5" />
+                    <path d="M3 17l9 5 9-5" />
+                  </svg></div>
+                <h3>Native Integration</h3>
+                <p>Nutzt das HUD-System von Minecraft 26.2 — kein Overlay-Trick.</p>
+              </div>
+            </div>
+            <div class="card reveal">
+              <div class="card-inner">
+                <div class="card-icon" style="background:linear-gradient(135deg,var(--redstone),var(--gold));"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" />
+                  </svg></div>
+                <h3>Sehr leichtgewichtig</h3>
+                <p>Eine Java-Klasse, 2,7 KB, kein Netzwerk-Code.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mod-installation">
+        <div class="container">
+          <div class="section-head reveal">
+            <span class="eyebrow">Installation</span>
+            <h2 class="section-title pixel">In vier Schritten installiert</h2>
+            <p class="section-sub">Keine Kommandozeile, kein Basteln.</p>
+          </div>
+          <div class="steps stagger">
+            <div class="step reveal">
+              <div class="step-inner">
+                <div class="step-num pixel">1</div>
+                <div>
+                  <h4>Version herunterladen</h4>
+                  <p>Wähle deine Minecraft-Version und klicke auf Herunterladen. Die Datei wird über Google Drive
+                    heruntergeladen.</p>
+                </div>
+              </div>
+            </div>
+            <div class="step reveal">
+              <div class="step-inner">
+                <div class="step-num pixel">2</div>
+                <div>
+                  <h4>Auf Drive herunterladen</h4>
+                  <p>Auf der Drive-Seite klickst du oben links auf den Download-Button (Pfeil nach unten).</p><span
+                    class="drive-tip"><svg class="drive-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter">
+                      <path d="M12 4v11" />
+                      <path d="M7 11l5 5 5-5" />
+                      <path d="M5 20h14" />
+                    </svg>Download-Pfeil, oben links</span>
+                </div>
+              </div>
+            </div>
+            <div class="step reveal">
+              <div class="step-inner">
+                <div class="step-num pixel">3</div>
+                <div>
+                  <h4>In den Mods-Ordner legen</h4>
+                  <p>Die Datei <code>ycoord-hud-1.0.0.jar</code> in den Mods-Ordner kopieren:</p><span
+                    class="code-path">%appdata%\.minecraft\mods <button class="copy-btn"
+                      onclick="copyPath(this)">Kopieren</button></span>
+                </div>
+              </div>
+            </div>
+            <div class="step reveal">
+              <div class="step-inner">
+                <div class="step-num pixel">4</div>
+                <div>
+                  <h4>Minecraft starten</h4>
+                  <p>Mit dem Fabric-Profil starten. Die Y-Koordinate erscheint sofort.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <div class="cta-wrap reveal">
+            <div class="cta-inner">
+              <h2>Mod herunterladen</h2>
+              <p>Wähle deine Minecraft-Version und lade die passende Mod herunter.</p>
+              <button class="btn btn-primary" onclick="showVersions('ycoord')">Versionen ansehen</button>
+              <p class="cta-note">Alle Versionen ab Minecraft 26.2 · Fabric</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================================================================
+         VIEW: VERSIONS LIST (YCOORD)
+         ================================================================
+         Each mod has its own versions view with id="view-versions-UNIQUE_ID".
+         Structure:
+           - Back button → showMod('UNIQUE_ID')
+           - .version-item with onclick="showDownload('UNIQUE_ID','MC_VERSION')"
+           - .version-empty placeholder for future versions
+         ================================================================ -->
+    <!-- VERSIONS LIST -->
+    <div id="view-versions" class="hidden">
+      <div class="standalone-page">
+        <div class="versions-page-bg"></div>
+        <div class="container">
+          <div class="versions-content">
+            <button class="back-link" onclick="showMod('ycoord')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+              Zurück zur Mod
+            </button>
+            <div class="standalone-header">
+              <span class="badge">Version wählen</span>
+              <h1 class="pixel standalone-title">Y-Coordinate HUD</h1>
+              <p class="standalone-sub">Wähle deine Minecraft-Version. Die neueste Version steht immer oben.</p>
+            </div>
+            <div class="versions-list stagger">
+              <div class="version-item reveal" onclick="showDownload('ycoord','26.2')">
+                <div class="version-item-left">
+                  <span class="version-tag newest">Neueste</span>
+                  <div class="version-info">
+                    <h3>Minecraft 26.2</h3>
+                    <p>ycoord-hud-1.0.0.jar · 2,7 KB · Fabric</p>
+                  </div>
+                </div>
+                <div class="version-arrow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="M12 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+              <div class="version-empty reveal">
+                <p>Weitere Versionen werden hinzugefügt, sobald neue Minecraft-Updates erscheinen.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         VIEW: DOWNLOAD PAGE (YCOORD)
+         ================================================================
+         Each mod has its own download view with id="view-download-UNIQUE_ID".
+         Structure:
+           - Back button → showVersions('UNIQUE_ID')
+           - Badge (#downloadBadge-UNIQUE_ID), Title, Subtitle (#downloadSub-UNIQUE_ID)
+           - Download button (#downloadLink-UNIQUE_ID)
+             * If download is ready: href="DRIVE_LINK", no pointer-events override
+             * If not ready: href="#" style="pointer-events:none;opacity:0.5;"
+               with text "Download kommt bald"
+         ================================================================ -->
+    <!-- DOWNLOAD PAGE -->
+    <div id="view-download" class="hidden">
+      <div class="standalone-page download-page">
+        <div class="download-bg">
+          <div class="download-orb orb-1"></div>
+          <div class="download-orb orb-2"></div>
+          <div class="download-orb orb-3"></div>
+        </div>
+        <div class="download-content">
+          <div class="container">
+            <button class="back-link back-link-light" onclick="showVersions('ycoord')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+              Zurück zu Versionen
+            </button>
+            <div class="download-header">
+              <span class="badge badge-light" id="downloadBadge">Minecraft 26.2</span>
+              <h1 class="pixel download-title">Y-Coordinate HUD</h1>
+              <p class="download-sub" id="downloadSub">ycoord-hud-1.0.0.jar · 2,7 KB · Fabric</p>
+            </div>
+            <div class="download-btn-wrap">
+              <a class="download-btn"
+                href="https://drive.google.com/file/d/1CvoEXsfiRMC1F8uIi61xg1Wzt97SvcMg/view?usp=sharing"
+                target="_blank" rel="noopener" id="downloadLink">
+                <span class="download-btn-bg"></span>
+                <span class="download-btn-text">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round" class="download-icon">
+                    <path d="M12 4v12" />
+                    <path d="M6 14l6 6 6-6" />
+                    <path d="M4 20h16" />
+                  </svg>
+                  Herunterladen
+                </span>
+              </a>
+            </div>
+            <p class="download-note">Der Download öffnet sich auf Google Drive.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <p class="footer-brand">&copy; 2026 <b>Y-Mod</b></p>
+        <div class="footer-links">
+          <a onclick="showHome()">Nach oben</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+    window.scrollTo(0, 0);
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ===== THEME TOGGLE ===== */
+    const savedTheme = localStorage.getItem('ymod-theme');
+    if (savedTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.querySelector('meta[name="theme-color"]').content = '#E8E4DF';
+    }
+    function toggleTheme() {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('ymod-theme', 'dark');
+        document.querySelector('meta[name="theme-color"]').content = '#0D0B09';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('ymod-theme', 'light');
+        document.querySelector('meta[name="theme-color"]').content = '#E8E4DF';
+      }
+    }
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('themeToggleMod').addEventListener('click', toggleTheme);
+    const progressBar = document.querySelector('.progress');
+    window.addEventListener('scroll', () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      progressBar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+    }, { passive: true });
+
+    /* =====================================================================
+       VIEW TRANSITIONS – ROUTING SYSTEM
+       =====================================================================
+       HOW IT WORKS:
+       The site has multiple "views" (full-page divs). Only one is visible
+       at a time. Clicking a button calls showMod/showVersions/showDownload
+       which calls showView(target, id) to animate the transition.
+
+       TO ADD A NEW MOD, you need 3 changes in this section:
+
+       STEP 1: Add view variables (one per new view div):
+         const viewModXX = document.getElementById('view-mod-XX');
+         const viewVersionsXX = document.getElementById('view-versions-XX');
+         const viewDownloadXX = document.getElementById('view-download-XX');
+
+       STEP 2: Add to allViews array (used by hideAll() to hide every view):
+         const allViews = [...existing..., viewModXX, viewVersionsXX, viewDownloadXX];
+
+       STEP 3: Update routing functions to handle the new ID:
+         function showMod(id) {
+           showView(id === 'XX' ? viewModXX :          // new mod
+                    id === 'YY' ? viewModYY :           // another mod
+                    viewMod, id);                        // default (ycoord)
+         }
+         (same pattern for showVersions and showDownload)
+
+       The 'id' parameter comes from onclick="showMod('XX')" in the HTML.
+       It must match the UNIQUE_ID used everywhere (CSS, HTML, JS).
+       ===================================================================== */
+    /* ===== VIEW TRANSITIONS ===== */
+    const viewHome = document.getElementById('view-home');
+    const viewMod = document.getElementById('view-mod');
+    const viewVersions = document.getElementById('view-versions');
+    const viewDownload = document.getElementById('view-download');
+    const navHome = document.getElementById('navHome');
+    const navMod = document.getElementById('navMod');
+    const navModName = document.getElementById('navModName');
+    const transMod = document.getElementById('transMod');
+    const allViews = [viewHome, viewMod, viewVersions, viewDownload];
+    let transitioning = false;
+
+    function hideAll() { allViews.forEach(v => v.classList.add('hidden')); }
+    function setNav(target) {
+      const isHome = target === viewHome;
+      navHome.style.display = isHome ? 'flex' : 'none';
+      navMod.style.display = isHome ? 'none' : 'flex';
+    }
+
+    function showView(target, id) {
+      if (transitioning) return;
+      transitioning = true;
+      const current = allViews.find(v => !v.classList.contains('hidden'));
+      if (current) current.classList.add('slide-out');
+      setTimeout(() => {
+        transMod.classList.add('active');
+        hideAll();
+        if (current) current.classList.remove('slide-out');
+      }, 250);
+      setTimeout(() => {
+        transMod.classList.remove('active');
+        target.classList.remove('hidden');
+        target.classList.add('slide-in');
+        setNav(target);
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        refreshReveals();
+        setTimeout(() => { target.classList.remove('slide-in'); transitioning = false; }, 550);
+      }, 850);
+    }
+
+    /* Mod names for nav bar – add new mod names here */
+    const modNames = { ycoord: 'Y-Coordinate HUD' };
+    function showMod(id) {
+      if (navModName && modNames[id]) navModName.textContent = modNames[id];
+      showView(viewMod, id);
+    }
+    function showHome() { showView(viewHome); }
+    function showVersions(id) { showView(viewVersions, id); }
+    function showDownload(id, mcVer) { showView(viewDownload, id); }
+
+    /* ===== INTRO ===== */
+    const intro = document.getElementById('intro');
+    const introTitle = document.querySelector('.intro-title');
+    const skipBtn = document.getElementById('introSkip');
+    'Y - MOD'.split('').forEach((ch, i) => {
+      const s = document.createElement('span');
+      s.className = 'iw' + (i >= 4 ? ' g' : ' w');
+      s.textContent = ch === ' ' ? '\u00A0' : ch;
+      s.style.transitionDelay = (i * 0.05) + 's';
+      introTitle.appendChild(s);
+    });
+
+    const icanvas = document.getElementById('introCanvas');
+    const ictx = icanvas.getContext('2d');
+    let iparticles = [], irafId = null, iangle = 0;
+    const icolors = ['#5D9B2B', '#2CB9AA', '#FCDB05', '#8B3A3A', '#ffffff'];
+    const W = () => icanvas.offsetWidth;
+    const H = () => icanvas.offsetHeight;
+
+    function initIntroParticles() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      icanvas.width = W() * dpr;
+      icanvas.height = H() * dpr;
+      ictx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const cnt = window.innerWidth < 720 ? 45 : 80;
+      iparticles = Array.from({ length: cnt }, () => {
+        const a = Math.random() * Math.PI * 2;
+        const d = Math.max(W(), H()) * 0.6 + Math.random() * 200;
+        return {
+          x: W() / 2 + Math.cos(a) * d,
+          y: H() / 2 + Math.sin(a) * d,
+          ox: 0, oy: 0,
+          angle: a, dist: d,
+          speed: 0.008 + Math.random() * 0.012,
+          drift: (Math.random() - 0.5) * 0.3,
+          r: Math.random() * 2.5 + 0.6,
+          sq: Math.random() < 0.4,
+          c: icolors[Math.floor(Math.random() * icolors.length)],
+          a: Math.random() * 0.5 + 0.3,
+          tw: Math.random() * Math.PI * 2,
+          targetDist: 30 + Math.random() * 90
+        };
+      });
+    }
+
+    function itick() {
+      ictx.clearRect(0, 0, W(), H());
+      ictx.globalCompositeOperation = 'lighter';
+      const cx = W() / 2, cy = H() / 2;
+      iangle += 0.003;
+      for (const p of iparticles) {
+        p.angle += p.speed;
+        p.dist = Math.max(p.targetDist, p.dist - 0.8);
+        p.tw += 0.025;
+        p.x = cx + Math.cos(p.angle + iangle) * p.dist + Math.sin(p.tw) * p.drift * 8;
+        p.y = cy + Math.sin(p.angle + iangle) * p.dist + Math.cos(p.tw) * p.drift * 8;
+        const flicker = 0.5 + 0.5 * Math.sin(p.tw);
+        ictx.globalAlpha = p.a * flicker;
+        ictx.fillStyle = p.c;
+        const sz = p.r * (0.7 + 0.3 * flicker);
+        if (p.sq) {
+          ictx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
+        } else {
+          ictx.beginPath();
+          ictx.arc(p.x, p.y, sz, 0, Math.PI * 2);
+          ictx.fill();
+        }
+      }
+      ictx.globalAlpha = 1;
+      ictx.globalCompositeOperation = 'source-over';
+      irafId = requestAnimationFrame(itick);
+    }
+
+    function stopIntroParticles() {
+      cancelAnimationFrame(irafId);
+      ictx.clearRect(0, 0, W(), H());
+    }
+
+    function burst() {
+      const w = W(), h = H();
+      const cx = w / 2, cy = h * 0.44;
+      const parts = Array.from({ length: 120 }, () => {
+        const a = Math.random() * Math.PI * 2;
+        const spd = 2 + Math.random() * 14;
+        return {
+          x: cx, y: cy,
+          vx: Math.cos(a) * spd,
+          vy: Math.sin(a) * spd - 2,
+          life: 1,
+          decay: 0.008 + Math.random() * 0.016,
+          r: 1 + Math.random() * 4,
+          c: icolors[Math.floor(Math.random() * icolors.length)],
+          trail: []
+        };
+      });
+      (function tick() {
+        ictx.clearRect(0, 0, w, h);
+        ictx.globalCompositeOperation = 'lighter';
+        let alive = false;
+        for (const p of parts) {
+          if (p.life <= 0) continue;
+          p.life -= p.decay;
+          if (p.life <= 0) continue;
+          alive = true;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.04;
+          p.vx *= 0.99;
+          const alpha = Math.max(0, p.life);
+          ictx.globalAlpha = alpha * 0.4;
+          ictx.fillStyle = p.c;
+          if (p.r > 2) ictx.fillRect(p.x - p.r / 2, p.y - p.r / 2, p.r, p.r);
+          ictx.globalAlpha = alpha;
+          ictx.beginPath();
+          ictx.arc(p.x, p.y, p.r * 0.6, 0, Math.PI * 2);
+          ictx.fill();
+        }
+        ictx.globalAlpha = 1;
+        ictx.globalCompositeOperation = 'source-over';
+        if (alive) requestAnimationFrame(tick);
+      })();
+    }
+
+    initIntroParticles(); itick();
+    let introDone = false;
+    function finishIntro() {
+      if (introDone) return; introDone = true;
+      stopIntroParticles(); burst();
+      window.scrollTo(0, 0);
+      intro.classList.add('exit');
+      setTimeout(() => {
+        document.body.classList.add('site-in');
+        document.body.classList.remove('intro-active');
+        intro.classList.add('open');
+      }, 200);
+      setTimeout(() => {
+        intro.style.display = 'none';
+        window.scrollTo(0, 0);
+        refreshReveals();
+      }, 900);
+    }
+
+    if (prefersReduced) {
+      intro.style.display = 'none';
+      document.body.classList.add('site-in');
+      document.body.classList.remove('intro-active');
+    } else {
+      setTimeout(() => { introTitle.classList.add('go'); intro.classList.add('go'); }, 450);
+      setTimeout(finishIntro, 2200);
+      skipBtn.addEventListener('click', finishIntro);
+    }
+
+    /* ===== COUNT-UP ===== */
+    function countUp(el, target, dur, decimals) {
+      const start = performance.now();
+      (function frame(now) { const p = Math.min((now - start) / dur, 1); const val = target * (1 - Math.pow(1 - p, 3)); el.textContent = decimals ? val.toFixed(decimals).replace('.', ',') : Math.round(val).toString(); if (p < 1) requestAnimationFrame(frame) })(performance.now());
+    }
+
+    /* ===== REVEAL ===== */
+    function refreshReveals() {
+      document.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+        const siblings = Array.from(el.parentElement.children).filter(c => c.classList.contains('reveal'));
+        el.style.transitionDelay = (siblings.indexOf(el) % 6) * 0.06 + 's';
+        revealObserver.observe(el);
+      });
+    }
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); revealObserver.unobserve(entry.target) } });
+    }, { threshold: 0.1 });
+    refreshReveals();
+
+    /* ===== STAT COUNTER ===== */
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (!entry.isIntersecting) return; const el = entry.target; countUp(el, parseFloat(el.dataset.target), 1200, parseInt(el.dataset.dec || '0', 10)); statObserver.unobserve(el) });
+    }, { threshold: 0.4 });
+    document.querySelectorAll('.stat-value').forEach(el => statObserver.observe(el));
+
+    /* ===== FAQ ===== */
+    document.querySelectorAll('.faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement, answer = btn.nextElementSibling, isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item.open').forEach(i => { i.classList.remove('open'); i.querySelector('.faq-a').style.maxHeight = null });
+        if (!isOpen) { item.classList.add('open'); answer.style.maxHeight = answer.scrollHeight + 'px' }
+      });
+    });
+
+    /* ===== COPY ===== */
+    function copyPath(btn) {
+      const text = '%appdata%\\.minecraft\\mods';
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => { btn.textContent = 'Kopiert!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied') }, 2000) }).catch(() => { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); btn.textContent = 'Kopiert!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied') }, 2000) });
+    }
+  </script>
+
+</body>
+
+</html>
