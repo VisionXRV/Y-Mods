@@ -14,6 +14,190 @@
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235D9B2B'/%3E%3Cstop offset='0.5' stop-color='%232CB9AA'/%3E%3Cstop offset='1' stop-color='%23FCDB05'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='8' fill='url(%23g)'/%3E%3Ctext x='50' y='72' font-family='Arial' font-size='58' font-weight='bold' fill='%23fff' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E">
   <style>
+    /* =====================================================================
+   HOW TO ADD A NEW MOD – STEP-BY-STEP GUIDE FOR AI / DEVELOPER
+   =====================================================================
+
+   This is a single-page application (SPA). There are NO separate files,
+   NO framework, NO build system. Everything is in this one HTML file.
+
+   OVERALL STRUCTURE:
+   - CSS (<style>)         : All design tokens, layout, animations, mod-specific styles
+   - HTML (<main>)          : 4 view types per mod, each as a separate <div> with an ID
+   - JavaScript (<script>)  : View transition system, intro animation, scroll effects
+
+   EACH MOD CONSISTS OF THESE PIECES (using "ycoord" as the existing example):
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 1. CSS – MOD-SPECIFIC STYLES (3 rules per mod)                    │
+   │                                                                    │
+   │    Location: Search for ".mod-banner-bg.ycoord" to find the area.  │
+   │                                                                    │
+   │    You need to add 3 CSS rules with a unique short ID (e.g. "xx"): │
+   │      .mod-banner-bg.XX         – dark theme banner gradient        │
+   │      [data-theme="light"]      – light theme banner gradient       │
+   │        .mod-banner-bg.XX                                          │
+   │      .mod-banner-icon.XX       – icon background gradient          │
+   │                                                                    │
+   │    Use existing Minecraft CSS variables like:                      │
+   │      --grad-grass, --grad-warm, --grad-diamond, --grad-ender,     │
+   │      --grad-redstone, --grad-gold, --grad-stone, --grad-dirt      │
+   │                                                                    │
+   │    Pick colors that match the mod's theme (farm=warm, HUD=diamond) │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 2. CSS – HIDDEN RULE (CRITICAL!)                                  │
+   │                                                                    │
+   │    Location: Search for "#view-home.hidden,"                       │
+   │                                                                    │
+   │    EVERY view ID must be listed here, otherwise the view will      │
+   │    stay visible (display:none won't apply). This was a real bug.   │
+   │    Add: #view-mod-XX.hidden, #view-versions-XX.hidden,             │
+   │         #view-download-XX.hidden                                   │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 3. CSS – DOWNLOAD PAGE ANIMATIONS                                  │
+   │                                                                    │
+   │    Location: Search for "#view-download:not(.hidden) .back-link"   │
+   │                                                                    │
+   │    There are 6 animation rules for the download page elements.     │
+   │    You must add the new view ID as a comma-separated selector:     │
+   │      #view-download:not(.hidden) .back-link,                       │
+   │      #view-download-XX:not(.hidden) .back-link { ... }             │
+   │    Repeat for all 6 rules (.badge-light, .download-title, etc.)   │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 4. HTML – MOD CARD ON HOME PAGE                                    │
+   │                                                                    │
+   │    Location: Search for "mods-grid stagger"                        │
+   │                                                                    │
+   │    Each mod needs a .mod-card div inside .mods-grid. Copy the      │
+   │    structure from the existing ycoord card. You need:              │
+   │      - onclick="showMod('XX')"        (unique mod ID)              │
+   │      - .mod-banner-bg.XX              (CSS class from step 1)      │
+   │      - .mod-banner-icon.XX pixel      (CSS class from step 1)      │
+   │      - .mod-banner-tag                (category label: HUD/Farm)   │
+   │      - .mod-banner-version            (e.g. "v1.0.0")              │
+   │      - <h3>Mod Name</h3>                                           │
+   │      - <p>Description</p>                                          │
+   │      - .mod-chip MC <b>26.2</b>                                    │
+   │      - .mod-chip <b>XX</b> KB                                      │
+   │      - .mod-chip Client-Mod                                        │
+   │      - .mod-vp-item for each supported MC version                  │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 5. HTML – DETAIL VIEW (view-mod-XX)                                │
+   │                                                                    │
+   │    Location: After the previous mod's detail view.                 │
+   │                                                                    │
+   │    Copy the entire view-mod structure from ycoord. It contains:    │
+   │      - <div id="view-mod-XX" class="hidden">                       │
+   │      - .mod-hero (badge, title, description, CTA buttons, facts)   │
+   │      - .mod-hero-right with .mod-icon-placeholder (icon/image)     │
+   │      - #mod-features-XX section with 6 .card items (features)      │
+   │      - #mod-installation-XX section with 4 .step items             │
+   │      - CTA section at the bottom                                   │
+   │                                                                    │
+   │    Key onclick handlers:                                           │
+   │      - "Mod herunterladen" button → showVersions('XX')             │
+   │      - "Installationsanleitung" link → href="#mod-installation-XX" │
+   │      - CTA button → showVersions('XX')                             │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 6. HTML – VERSIONS VIEW (view-versions-XX)                         │
+   │                                                                    │
+   │    Location: After the previous mod's versions view.               │
+   │                                                                    │
+   │    Copy the view-versions structure. It contains:                  │
+   │      - <div id="view-versions-XX" class="hidden">                  │
+   │      - Back button → showMod('XX')                                 │
+   │      - .version-item with onclick="showDownload('XX','26.2')"      │
+   │      - .version-empty with "Weitere Versionen..." text             │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 7. HTML – DOWNLOAD VIEW (view-download-XX)                         │
+   │                                                                    │
+   │    Location: After the previous mod's download view.               │
+   │                                                                    │
+   │    Copy the view-download structure. It contains:                  │
+   │      - <div id="view-download-XX" class="hidden">                  │
+   │      - Back button → showVersions('XX')                            │
+   │      - #downloadBadge-XX, #downloadSub-XX, #downloadLink-XX        │
+   │      - Download button (add href="#" and style="pointer-events:none│
+   │        ;opacity:0.5;" if download is not ready yet)               │
+   │      - "Download kommt bald" text if not ready                     │
+   └─────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │ 8. JAVASCRIPT – ROUTING (3 changes needed)                        │
+   │                                                                    │
+   │    Location: Search for "VIEW TRANSITIONS" in the <script> block.  │
+   │                                                                    │
+   │    a) Add view variables after the existing ones:                  │
+   │       const viewModXX = document.getElementById('view-mod-XX');     │
+   │       const viewVersionsXX = document.getElementById('view-versions-XX');│
+   │       const viewDownloadXX = document.getElementById('view-download-XX');│
+   │                                                                    │
+   │    b) Add to the allViews array:                                   │
+   │       const allViews = [..., viewModXX, viewVersionsXX, viewDownloadXX];│
+   │                                                                    │
+   │    c) Update the modNames object and routing functions:               │
+   │       const modNames = { ycoord: 'Y-Coordinate HUD',                │
+   │                          xx: 'Your New Mod Name' };                  │
+   │       function showMod(id) {                                         │
+   │         if (navModName && modNames[id]) navModName.textContent = ... │
+   │         showView(id === 'XX' ? viewModXX : viewMod, id);             │
+   │       }                                                              │
+   │       (same pattern for showVersions and showDownload)               │
+   │                                                                    │
+   │    IMPORTANT: Each mod gets a unique short ID (e.g. "ycoord","xx"). │
+   │    This ID is used in onclick handlers and in the routing functions.│
+   └─────────────────────────────────────────────────────────────────────┘
+
+   NAMING CONVENTION FOR VIEW IDs:
+     Home page card:     onclick="showMod('UNIQUE_ID')"
+     Detail view:        id="view-mod-UNIQUE_ID"
+     Versions view:      id="view-versions-UNIQUE_ID"
+     Download view:      id="view-download-UNIQUE_ID"
+     Download elements:  id="downloadBadge-UNIQUE_ID"
+                         id="downloadSub-UNIQUE_ID"
+                         id="downloadLink-UNIQUE_ID"
+     CSS classes:        .mod-banner-bg.UNIQUE_ID
+                         .mod-banner-icon.UNIQUE_ID
+     Feature section:    id="mod-features-UNIQUE_ID"
+     Install section:    id="mod-installation-UNIQUE_ID"
+
+   COMMON MISTAKES TO AVOID:
+     - Forgetting to add the view ID to the .hidden CSS rule (=broken layout)
+     - Forgetting to add the view ID to the download animation CSS rules
+     - Forgetting to add the view to the allViews array in JavaScript
+     - Using the same short ID for two different mods
+     - Forgetting to update the navMod bar name (line ~3871) when switching mods
+
+   KNOWN LIMITATION (FIXED):
+     The top nav bar (#navMod) now dynamically updates via the modNames
+     object in showMod(). When adding a new mod, add the name to modNames:
+       const modNames = { ycoord: 'Y-Coordinate HUD', xx: 'Your Mod Name' };
+
+   DETAILED CSS VARIABLES AVAILABLE FOR BANNER GRADIENTS:
+     Dark backgrounds:   --bg (#0D0B09), --bg-alt (#15120E)
+     Gradient presets:
+       --grad-grass    (green: #5D9B2B → #3D7A18)    good for: nature, plants
+       --grad-warm     (gold: #8B6914 → #FCDB05)     good for: farming, harvest
+       --grad-diamond  (teal: #2CB9AA → #1FA89A)     good for: tech, HUD
+       --grad-ender    (purple: #9B59B6 → #7D3C98)   good for: magic, ender
+       --grad-redstone (red: #FF3333 → #CC2222)       good for: combat, redstone
+       --grad-gold     (yellow: #FCDB05 → #E5C100)    good for: economy, valuables
+       --grad-stone    (grey: #7F7F7F → #5A5A5A)      good for: building, utility
+       --grad-dirt     (brown: #8B6914 → #6B4E12)     good for: terrain, digging
+   ===================================================================== */
+
     /* ============================
    DESIGN TOKENS – MINECRAFT
    ============================ */
@@ -320,9 +504,10 @@
 
     body.site-in #view-home {
       opacity: 1;
-      transition: opacity 0.6s var(--ease) 0.2s;
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* ========== INTRO ========== */
     #intro {
       position: fixed;
       inset: 0;
@@ -330,233 +515,479 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #0A0806;
+      background: #060804;
+      overflow: hidden;
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .intro-half {
+    #intro.open {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Animated pixel grid bg */
+    .intro-grid {
       position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 50.1%;
-      z-index: 1;
-      background: radial-gradient(circle at 50% 40%, rgba(93, 155, 43, 0.1), transparent 60%), #0A0806;
-      transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+      inset: -50%;
+      background-image:
+        linear-gradient(rgba(93, 155, 43, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(93, 155, 43, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridScroll 6s linear infinite;
+      opacity: 0;
+      transition: opacity 1s ease 0.2s;
+      z-index: 0;
     }
 
-    .intro-half.left {
-      left: 0;
-      border-right: 2px solid rgba(255, 255, 255, 0.04);
+    #intro.go .intro-grid {
+      opacity: 1;
     }
 
-    .intro-half.right {
-      right: 0;
-      border-left: 2px solid rgba(255, 255, 255, 0.04);
+    @keyframes gridScroll {
+      to {
+        transform: translate(48px, 48px);
+      }
     }
 
-    #intro.open .intro-half.left {
-      transform: translateX(-101%);
+    /* Radial energy pulse */
+    .intro-pulse {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 500px;
+      height: 500px;
+      transform: translate(-50%, -50%) scale(0.4);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(93, 155, 43, 0.15) 0%, rgba(44, 185, 170, 0.05) 40%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      z-index: 0;
+      pointer-events: none;
     }
 
-    #intro.open .intro-half.right {
-      transform: translateX(101%);
+    #intro.go .intro-pulse {
+      opacity: 1;
+      animation: pulseExpand 2.5s ease-out 0.3s both;
     }
 
+    @keyframes pulseExpand {
+      0% {
+        transform: translate(-50%, -50%) scale(0.4);
+        opacity: 0;
+      }
+
+      30% {
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(1.6);
+        opacity: 0;
+      }
+    }
+
+    /* Canvas particles */
     #introCanvas {
       position: absolute;
       inset: 0;
       z-index: 2;
     }
 
+    /* Vignette overlay */
     .intro-vignette {
       position: absolute;
       inset: 0;
       z-index: 3;
       pointer-events: none;
-      background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+      background: radial-gradient(ellipse at center, transparent 25%, rgba(0, 0, 0, 0.65) 100%);
     }
 
-    .intro-scan {
+    /* Horizontal sweep line */
+    .intro-sweep {
       position: absolute;
       left: 0;
       right: 0;
-      top: -2px;
-      height: 2px;
+      top: -3px;
+      height: 3px;
       z-index: 4;
       pointer-events: none;
-      background: linear-gradient(90deg, transparent, var(--grass), var(--diamond), transparent);
-      box-shadow: 0 0 20px rgba(93, 155, 43, 0.5);
+      background: linear-gradient(90deg, transparent 2%, var(--grass) 25%, var(--diamond) 75%, transparent 98%);
+      box-shadow: 0 0 30px 4px rgba(93, 155, 43, 0.3), 0 0 80px 2px rgba(44, 185, 170, 0.15);
       opacity: 0;
-      animation: scan 1.6s ease-in-out 0.8s both;
     }
 
-    @keyframes scan {
+    #intro.go .intro-sweep {
+      animation: sweepDown 1.4s cubic-bezier(0.33, 0, 0.2, 1) 0.5s both;
+    }
+
+    @keyframes sweepDown {
       0% {
+        top: -3px;
         opacity: 0;
-        top: -2px
       }
 
-      15% {
-        opacity: 1
+      8% {
+        opacity: 0.9;
       }
 
-      85% {
-        opacity: 1
+      88% {
+        opacity: 0.9;
       }
 
       100% {
+        top: 100%;
         opacity: 0;
-        top: 100%
       }
     }
 
+    /* Flash on exit */
     .flash {
       position: absolute;
       inset: 0;
       z-index: 6;
       pointer-events: none;
       opacity: 0;
-      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 55%);
+      background: radial-gradient(circle at center, rgba(93, 155, 43, 0.25), rgba(255, 255, 255, 0.5) 35%, transparent 65%);
+      transform: scale(0.7);
     }
 
     #intro.open .flash {
-      animation: flashOut 0.6s ease-out both;
+      animation: flashBurst 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
     }
 
-    @keyframes flashOut {
-      from {
-        opacity: 0.8
+    @keyframes flashBurst {
+      0% {
+        opacity: 0;
+        transform: scale(0.7);
       }
 
-      to {
-        opacity: 0
+      25% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.8);
       }
     }
 
+    /* Main content wrapper */
     .intro-content {
       position: relative;
       z-index: 5;
       text-align: center;
       padding: 0 24px;
-      transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+      transition: opacity 0.4s var(--ease), transform 0.4s var(--ease), filter 0.4s var(--ease);
     }
 
     #intro.exit .intro-content {
       opacity: 0;
-      transform: scale(1.04) translateY(-10px);
+      transform: scale(1.08) translateY(-20px);
+      filter: blur(12px);
     }
 
+    /* ========== LOGO ========== */
     .intro-logo {
       position: relative;
-      width: 120px;
-      height: 120px;
-      margin: 0 auto 32px;
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 44px;
     }
 
+    /* Glow behind logo */
+    .intro-logo-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      transform: translate(-50%, -50%) scale(0.3);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(93, 155, 43, 0.5) 0%, rgba(44, 185, 170, 0.2) 40%, transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #intro.go .intro-logo-glow {
+      animation: glowIn 0.8s cubic-bezier(0.2, 0.8, 0.3, 1) 0.5s both, glowBreath 3s ease-in-out 1.3s infinite;
+    }
+
+    @keyframes glowIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    @keyframes glowBreath {
+
+      0%,
+      100% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.15);
+      }
+    }
+
+    /* Y Logo mark with glitch effect */
     .intro-logo-mark {
       position: absolute;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 64px;
+      font-size: 76px;
       font-weight: 800;
       line-height: 1;
-      background: var(--grad);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      filter: drop-shadow(0 0 28px var(--accent-glow));
-      animation: logoIn 1s var(--ease-spring) 0.9s both, shimmer 5s linear infinite;
+      font-family: "Press Start 2P", monospace;
+      color: #fff;
+      opacity: 0;
+      z-index: 2;
     }
 
-    @keyframes logoIn {
-      from {
+    #intro.go .intro-logo-mark {
+      animation: logoGlitch 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) 0.4s both;
+    }
+
+    @keyframes logoGlitch {
+      0% {
         opacity: 0;
-        transform: scale(0.2)
+        transform: scale(2.5);
+        filter: blur(20px) brightness(3);
+      }
+
+      15% {
+        opacity: 1;
+        transform: scale(0.9) translate(-3px, 2px);
+        filter: blur(0) brightness(2);
+        clip-path: inset(15% 0 55% 0);
+      }
+
+      30% {
+        transform: scale(1.05) translate(4px, -1px);
+        clip-path: inset(60% 0 10% 0);
+        filter: blur(0) brightness(1.5);
+      }
+
+      45% {
+        transform: scale(0.97) translate(-2px, 3px);
+        clip-path: inset(5% 0 70% 0);
+        filter: brightness(1.2);
       }
 
       60% {
-        opacity: 1
+        transform: scale(1.02) translate(1px, -1px);
+        clip-path: inset(40% 0 30% 0);
+        filter: brightness(1.1);
       }
 
-      to {
+      80% {
+        transform: scale(1);
+        clip-path: inset(0);
+        filter: brightness(1);
+      }
+
+      100% {
         opacity: 1;
-        transform: scale(1)
+        transform: scale(1) translate(0, 0);
+        clip-path: inset(0);
+        filter: brightness(1) drop-shadow(0 0 24px rgba(93, 155, 43, 0.6));
       }
     }
 
-    @keyframes shimmer {
-      to {
-        background-position: -200% center;
-      }
-    }
-
-    .intro-logo-ring {
+    /* Chromatic aberration pseudo-elements */
+    .intro-logo-mark::before,
+    .intro-logo-mark::after {
+      content: 'Y';
       position: absolute;
-      inset: -14px;
-      border-radius: 0;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 76px;
+      font-weight: 800;
+      font-family: "Press Start 2P", monospace;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .intro-logo-mark::before {
+      color: rgba(93, 155, 43, 0.7);
+    }
+
+    .intro-logo-mark::after {
+      color: rgba(44, 185, 170, 0.7);
+    }
+
+    #intro.go .intro-logo-mark::before {
+      animation: chromaR 0.5s ease-out 0.4s both;
+    }
+
+    #intro.go .intro-logo-mark::after {
+      animation: chromaB 0.5s ease-out 0.42s both;
+    }
+
+    @keyframes chromaR {
+      0% {
+        opacity: 0.9;
+        transform: translate(-10px, 5px);
+      }
+
+      30% {
+        opacity: 0.5;
+        transform: translate(6px, -3px);
+      }
+
+      60% {
+        opacity: 0.2;
+        transform: translate(-2px, 1px);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(0);
+      }
+    }
+
+    @keyframes chromaB {
+      0% {
+        opacity: 0.9;
+        transform: translate(10px, -5px);
+      }
+
+      30% {
+        opacity: 0.5;
+        transform: translate(-6px, 3px);
+      }
+
+      60% {
+        opacity: 0.2;
+        transform: translate(2px, -1px);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(0);
+      }
+    }
+
+    /* Conic gradient ring */
+    .intro-ring {
+      position: absolute;
+      inset: -16px;
+      border-radius: 50%;
       background: conic-gradient(from 0deg, var(--grass), var(--diamond), var(--gold), var(--dirt), var(--grass));
       -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
       mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
-      animation: spin 3s linear infinite 0.9s;
-      opacity: 0.7;
+      opacity: 0;
+      z-index: 1;
     }
 
-    @keyframes spin {
+    #intro.go .intro-ring {
+      animation: ringReveal 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) 0.5s both, introSpin 2s linear 0.5s infinite;
+    }
+
+    @keyframes ringReveal {
+      0% {
+        opacity: 0;
+        transform: scale(1.8) rotate(-120deg);
+      }
+
+      100% {
+        opacity: 0.85;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+
+    @keyframes introSpin {
       to {
         transform: rotate(360deg);
       }
     }
 
+    /* Orbiting pixel dots */
     .intro-orbit {
       position: absolute;
-      animation: spin 9s linear infinite;
+      z-index: 1;
+      opacity: 0;
     }
 
-    .intro-orbit.o2 {
-      animation-direction: reverse;
-      animation-duration: 12s;
-    }
-
-    .intro-orbit .intro-cube {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border-radius: 0;
-      left: 50%;
-      top: 0;
-      transform: translateX(-50%);
+    #intro.go .intro-orbit {
+      animation: orbitFadeIn 0.4s ease 0.7s both;
     }
 
     .intro-orbit.o1 {
-      inset: -54px;
+      inset: -52px;
+      animation-delay: 0.7s !important;
     }
 
-    .intro-orbit.o1 .intro-cube {
-      background: var(--grass);
-      box-shadow: 0 0 12px rgba(93, 155, 43, 0.8);
+    #intro.go .intro-orbit.o1 {
+      animation: orbitFadeIn 0.4s ease 0.7s both, introSpin 4s linear 0.7s infinite;
     }
 
     .intro-orbit.o2 {
       inset: -70px;
     }
 
-    .intro-orbit.o2 .intro-cube {
-      background: var(--diamond);
-      box-shadow: 0 0 12px rgba(44, 185, 170, 0.8);
+    #intro.go .intro-orbit.o2 {
+      animation: orbitFadeIn 0.4s ease 0.8s both, introSpin 5.5s linear 0.8s infinite reverse;
     }
 
+    @keyframes orbitFadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .intro-orbit .intro-cube {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      border-radius: 0;
+    }
+
+    .intro-orbit.o1 .intro-cube {
+      background: var(--grass);
+      box-shadow: 0 0 10px rgba(93, 155, 43, 0.9), 0 0 20px rgba(93, 155, 43, 0.4);
+    }
+
+    .intro-orbit.o2 .intro-cube {
+      background: var(--diamond);
+      box-shadow: 0 0 10px rgba(44, 185, 170, 0.9), 0 0 20px rgba(44, 185, 170, 0.4);
+    }
+
+    /* ========== TITLE ========== */
     .intro-title {
-      font-size: clamp(16px, 4vw, 26px);
+      font-size: clamp(18px, 4vw, 28px);
       line-height: 1.6;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.06em;
+      opacity: 0;
+    }
+
+    #intro.go .intro-title {
+      opacity: 1;
     }
 
     .intro-title .iw {
       display: inline-block;
       opacity: 0;
-      transform: translateY(20px) scale(0.9);
+      transform: translateY(24px) scale(0.8);
       transition: opacity 0.5s ease, transform 0.5s var(--ease-spring);
     }
 
@@ -567,23 +998,26 @@
 
     .intro-title .iw.w {
       color: #fff;
-      text-shadow: 0 0 16px rgba(93, 155, 43, 0.35);
+      text-shadow: 0 0 24px rgba(93, 155, 43, 0.4), 0 2px 8px rgba(0, 0, 0, 0.5);
     }
 
     .intro-title .iw.g {
       background: var(--grad);
+      background-size: 200% auto;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      animation: shimmer 4s linear infinite;
     }
 
+    /* ========== SUBTITLE ========== */
     .intro-sub {
-      margin-top: 16px;
-      font-size: 22px;
+      margin-top: 18px;
+      font-size: 20px;
       color: var(--text-secondary);
       opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.6s ease 0.15s, transform 0.6s ease 0.15s;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s;
     }
 
     #intro.go .intro-sub {
@@ -599,6 +1033,7 @@
       font-weight: 700;
     }
 
+    /* ========== SKIP BTN ========== */
     .intro-skip {
       position: absolute;
       z-index: 7;
@@ -606,19 +1041,39 @@
       right: 28px;
       font-size: 9px;
       color: var(--text-tertiary);
-      background: rgba(255, 255, 255, 0.04);
-      border: 2px solid rgba(255, 255, 255, 0.08);
-      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 16px;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: color 0.2s, background 0.2s, border-color 0.2s;
+      transition: color 0.3s, background 0.3s, border-color 0.3s, transform 0.2s;
       box-shadow: var(--mc-inner);
+      opacity: 0;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    #intro.go .intro-skip {
+      animation: fadeIn 0.5s ease 1.2s both;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
     }
 
     .intro-skip:hover {
       color: var(--text);
       background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    @keyframes shimmer {
+      to {
+        background-position: -200% center;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -876,6 +1331,9 @@
       transform: scale(1) translateY(0);
     }
 
+    /* IMPORTANT: Every mod view ID MUST be listed here.
+       If you add a new mod, add: #view-mod-XX.hidden, #view-versions-XX.hidden,
+       #view-download-XX.hidden — otherwise the view stays visible and breaks layout. */
     #view-home.hidden,
     #view-mod.hidden,
     #view-versions.hidden,
@@ -1395,6 +1853,25 @@
       transform: scale(1.04);
     }
 
+    /* =================================================================
+       MOD-SPECIFIC BANNER STYLES
+       =================================================================
+       Each mod needs 3 CSS rules with a unique short ID (e.g. "ycoord", "xx").
+       The ID is used in the HTML: .mod-banner-bg.ID and .mod-banner-icon.ID.
+
+       RULES TO ADD PER MOD:
+         .mod-banner-bg.UNIQUE_ID          { background: ... }   (dark theme)
+         [data-theme="light"]
+           .mod-banner-bg.UNIQUE_ID        { background: ... }   (light theme)
+         .mod-banner-icon.UNIQUE_ID        { background: ... }   (icon gradient)
+
+       Available CSS gradient variables:
+         --grad-grass (green), --grad-warm (gold/brown), --grad-diamond (teal),
+         --grad-ender (purple), --grad-redstone (red), --grad-gold (yellow),
+         --grad-stone (grey), --grad-dirt (brown)
+       ================================================================= */
+
+    /* --- YCOORD MOD: HUD theme (diamond + grass) --- */
     .mod-banner-bg.ycoord {
       background: radial-gradient(circle at 70% 30%, rgba(44, 185, 170, 0.4), transparent 60%), radial-gradient(circle at 25% 75%, rgba(93, 155, 43, 0.3), transparent 55%), linear-gradient(135deg, #0D0B09, #15120E);
     }
@@ -3322,15 +3799,16 @@
   </div>
 
   <div id="intro" aria-hidden="true">
-    <div class="intro-half left"></div>
-    <div class="intro-half right"></div>
     <canvas id="introCanvas"></canvas>
+    <div class="intro-grid"></div>
+    <div class="intro-pulse"></div>
     <div class="intro-vignette"></div>
-    <div class="intro-scan"></div>
+    <div class="intro-sweep"></div>
     <div class="flash"></div>
     <div class="intro-content">
       <div class="intro-logo">
-        <span class="intro-logo-ring"></span>
+        <div class="intro-logo-glow"></div>
+        <span class="intro-ring"></span>
         <span class="intro-orbit o1"><span class="intro-cube"></span></span>
         <span class="intro-orbit o2"><span class="intro-cube"></span></span>
         <span class="intro-logo-mark">Y</span>
@@ -3388,7 +3866,9 @@
           </svg>
           Zurück
         </span>
-        <span class="hide-mobile">Y-Coordinate HUD</span>
+        <!-- IMPORTANT: This mod name is updated dynamically by showMod() in JS.
+             When adding a new mod, add the name to the 'names' object in showMod(). -->
+        <span class="hide-mobile" id="navModName">Y-Coordinate HUD</span>
         <button class="theme-toggle" id="themeToggleMod" aria-label="Theme wechseln">
           <div class="toggle-thumb">
             <div class="toggle-moon"></div>
@@ -3449,6 +3929,16 @@
 
       <div class="mc-divider"></div>
 
+      <!-- =================================================================
+           HOME PAGE – MODS GRID
+           =================================================================
+           Each mod needs a .mod-card div inside .mods-grid.
+           The onclick calls showMod('UNIQUE_ID') which routes to the detail view.
+           Copy the structure from an existing card and customize:
+             - onclick ID, banner CSS class, icon, tag, name, description
+             - mod-chips: MC version, file size, mod type
+             - mod-vp-item: each supported MC version
+           ================================================================= -->
       <section id="mods-section" class="mods-section pt0">
         <div class="container">
           <div class="section-head reveal">
@@ -3509,6 +3999,20 @@
       </div>
     </div>
 
+    <!-- ================================================================
+         VIEW: MOD DETAIL (YCOORD)
+         ================================================================
+         Each mod has its own detail view with id="view-mod-UNIQUE_ID".
+         Structure:
+           1. .mod-hero     – Badge, title, description, CTA buttons, fact chips
+           2. .mod-features – 6 feature cards with icon, title, description
+           3. .mod-installation – 4-step install guide
+           4. CTA section – bottom download call-to-action
+         onclick handlers:
+           - "Mod herunterladen" → showVersions('UNIQUE_ID')
+           - "Installationsanleitung" → href="#mod-installation-UNIQUE_ID"
+           - CTA button → showVersions('UNIQUE_ID')
+         ================================================================ -->
     <!-- MOD: Y-COORD -->
     <div id="view-mod" class="hidden">
       <header class="mod-hero">
@@ -3702,6 +4206,15 @@
       </section>
     </div>
 
+    <!-- ================================================================
+         VIEW: VERSIONS LIST (YCOORD)
+         ================================================================
+         Each mod has its own versions view with id="view-versions-UNIQUE_ID".
+         Structure:
+           - Back button → showMod('UNIQUE_ID')
+           - .version-item with onclick="showDownload('UNIQUE_ID','MC_VERSION')"
+           - .version-empty placeholder for future versions
+         ================================================================ -->
     <!-- VERSIONS LIST -->
     <div id="view-versions" class="hidden">
       <div class="standalone-page">
@@ -3747,6 +4260,18 @@
       </div>
     </div>
 
+    <!-- ================================================================
+         VIEW: DOWNLOAD PAGE (YCOORD)
+         ================================================================
+         Each mod has its own download view with id="view-download-UNIQUE_ID".
+         Structure:
+           - Back button → showVersions('UNIQUE_ID')
+           - Badge (#downloadBadge-UNIQUE_ID), Title, Subtitle (#downloadSub-UNIQUE_ID)
+           - Download button (#downloadLink-UNIQUE_ID)
+             * If download is ready: href="DRIVE_LINK", no pointer-events override
+             * If not ready: href="#" style="pointer-events:none;opacity:0.5;"
+               with text "Download kommt bald"
+         ================================================================ -->
     <!-- DOWNLOAD PAGE -->
     <div id="view-download" class="hidden">
       <div class="standalone-page download-page">
@@ -3836,6 +4361,35 @@
       progressBar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
     }, { passive: true });
 
+    /* =====================================================================
+       VIEW TRANSITIONS – ROUTING SYSTEM
+       =====================================================================
+       HOW IT WORKS:
+       The site has multiple "views" (full-page divs). Only one is visible
+       at a time. Clicking a button calls showMod/showVersions/showDownload
+       which calls showView(target, id) to animate the transition.
+
+       TO ADD A NEW MOD, you need 3 changes in this section:
+
+       STEP 1: Add view variables (one per new view div):
+         const viewModXX = document.getElementById('view-mod-XX');
+         const viewVersionsXX = document.getElementById('view-versions-XX');
+         const viewDownloadXX = document.getElementById('view-download-XX');
+
+       STEP 2: Add to allViews array (used by hideAll() to hide every view):
+         const allViews = [...existing..., viewModXX, viewVersionsXX, viewDownloadXX];
+
+       STEP 3: Update routing functions to handle the new ID:
+         function showMod(id) {
+           showView(id === 'XX' ? viewModXX :          // new mod
+                    id === 'YY' ? viewModYY :           // another mod
+                    viewMod, id);                        // default (ycoord)
+         }
+         (same pattern for showVersions and showDownload)
+
+       The 'id' parameter comes from onclick="showMod('XX')" in the HTML.
+       It must match the UNIQUE_ID used everywhere (CSS, HTML, JS).
+       ===================================================================== */
     /* ===== VIEW TRANSITIONS ===== */
     const viewHome = document.getElementById('view-home');
     const viewMod = document.getElementById('view-mod');
@@ -3843,6 +4397,7 @@
     const viewDownload = document.getElementById('view-download');
     const navHome = document.getElementById('navHome');
     const navMod = document.getElementById('navMod');
+    const navModName = document.getElementById('navModName');
     const transMod = document.getElementById('transMod');
     const allViews = [viewHome, viewMod, viewVersions, viewDownload];
     let transitioning = false;
@@ -3854,7 +4409,6 @@
       navMod.style.display = isHome ? 'none' : 'flex';
     }
 
-    // With loading overlay (all transitions)
     function showView(target, id) {
       if (transitioning) return;
       transitioning = true;
@@ -3872,14 +4426,16 @@
         setNav(target);
         window.scrollTo({ top: 0, behavior: 'instant' });
         refreshReveals();
-        if (id === 'ycoord' && target === viewMod) {
-          setTimeout(() => { countUp(document.getElementById('previewCoord'), 64, 900, 0); }, 300);
-        }
         setTimeout(() => { target.classList.remove('slide-in'); transitioning = false; }, 550);
       }, 850);
     }
 
-    function showMod(id) { showView(viewMod, id); }
+    /* Mod names for nav bar – add new mod names here */
+    const modNames = { ycoord: 'Y-Coordinate HUD' };
+    function showMod(id) {
+      if (navModName && modNames[id]) navModName.textContent = modNames[id];
+      showView(viewMod, id);
+    }
     function showHome() { showView(viewHome); }
     function showVersions(id) { showView(viewVersions, id); }
     function showDownload(id, mcVer) { showView(viewDownload, id); }
@@ -3892,41 +4448,119 @@
       const s = document.createElement('span');
       s.className = 'iw' + (i >= 4 ? ' g' : ' w');
       s.textContent = ch === ' ' ? '\u00A0' : ch;
-      s.style.transitionDelay = (i * 0.06) + 's';
+      s.style.transitionDelay = (i * 0.05) + 's';
       introTitle.appendChild(s);
     });
 
     const icanvas = document.getElementById('introCanvas');
     const ictx = icanvas.getContext('2d');
-    let iparticles = [], irafId = null;
+    let iparticles = [], irafId = null, iangle = 0;
     const icolors = ['#5D9B2B', '#2CB9AA', '#FCDB05', '#8B3A3A', '#ffffff'];
+    const W = () => icanvas.offsetWidth;
+    const H = () => icanvas.offsetHeight;
 
     function initIntroParticles() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      icanvas.width = icanvas.offsetWidth * dpr;
-      icanvas.height = icanvas.offsetHeight * dpr;
+      icanvas.width = W() * dpr;
+      icanvas.height = H() * dpr;
       ictx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = window.innerWidth < 720 ? 35 : 65;
-      iparticles = Array.from({ length: count }, () => ({
-        x: Math.random() * icanvas.offsetWidth, y: icanvas.offsetHeight + Math.random() * 90,
-        r: Math.random() * 2.4 + .8, s: Math.random() * 3.4 + 1.5, sq: Math.random() < .45,
-        vy: Math.random() * 1.1 + .25, vx: (Math.random() - .5) * .4,
-        c: icolors[Math.floor(Math.random() * icolors.length)],
-        a: Math.random() * .5 + .25, tw: Math.random() * Math.PI * 2
-      }));
+      const cnt = window.innerWidth < 720 ? 45 : 80;
+      iparticles = Array.from({ length: cnt }, () => {
+        const a = Math.random() * Math.PI * 2;
+        const d = Math.max(W(), H()) * 0.6 + Math.random() * 200;
+        return {
+          x: W() / 2 + Math.cos(a) * d,
+          y: H() / 2 + Math.sin(a) * d,
+          ox: 0, oy: 0,
+          angle: a, dist: d,
+          speed: 0.008 + Math.random() * 0.012,
+          drift: (Math.random() - 0.5) * 0.3,
+          r: Math.random() * 2.5 + 0.6,
+          sq: Math.random() < 0.4,
+          c: icolors[Math.floor(Math.random() * icolors.length)],
+          a: Math.random() * 0.5 + 0.3,
+          tw: Math.random() * Math.PI * 2,
+          targetDist: 30 + Math.random() * 90
+        };
+      });
     }
+
     function itick() {
-      ictx.clearRect(0, 0, icanvas.offsetWidth, icanvas.offsetHeight);
+      ictx.clearRect(0, 0, W(), H());
       ictx.globalCompositeOperation = 'lighter';
-      for (const p of iparticles) { p.y -= p.vy; p.x += p.vx + Math.sin(p.tw += .02) * .2; if (p.y < -12) { p.y = icanvas.offsetHeight + 12; p.x = Math.random() * icanvas.offsetWidth } ictx.globalAlpha = p.a * (.55 + .45 * Math.sin(p.tw)); ictx.fillStyle = p.c; if (p.sq) ictx.fillRect(p.x, p.y, p.s, p.s); else { ictx.beginPath(); ictx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ictx.fill() } }
-      ictx.globalAlpha = 1; ictx.globalCompositeOperation = 'source-over';
+      const cx = W() / 2, cy = H() / 2;
+      iangle += 0.003;
+      for (const p of iparticles) {
+        p.angle += p.speed;
+        p.dist = Math.max(p.targetDist, p.dist - 0.8);
+        p.tw += 0.025;
+        p.x = cx + Math.cos(p.angle + iangle) * p.dist + Math.sin(p.tw) * p.drift * 8;
+        p.y = cy + Math.sin(p.angle + iangle) * p.dist + Math.cos(p.tw) * p.drift * 8;
+        const flicker = 0.5 + 0.5 * Math.sin(p.tw);
+        ictx.globalAlpha = p.a * flicker;
+        ictx.fillStyle = p.c;
+        const sz = p.r * (0.7 + 0.3 * flicker);
+        if (p.sq) {
+          ictx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
+        } else {
+          ictx.beginPath();
+          ictx.arc(p.x, p.y, sz, 0, Math.PI * 2);
+          ictx.fill();
+        }
+      }
+      ictx.globalAlpha = 1;
+      ictx.globalCompositeOperation = 'source-over';
       irafId = requestAnimationFrame(itick);
     }
-    function stopIntroParticles() { cancelAnimationFrame(irafId); ictx.clearRect(0, 0, icanvas.offsetWidth, icanvas.offsetHeight) }
+
+    function stopIntroParticles() {
+      cancelAnimationFrame(irafId);
+      ictx.clearRect(0, 0, W(), H());
+    }
+
     function burst() {
-      const w = icanvas.offsetWidth, h = icanvas.offsetHeight;
-      const parts = Array.from({ length: 80 }, () => ({ x: w / 2, y: h * .45, vx: (Math.random() - .5) * 14, vy: (Math.random() - .5) * 14 - 2, life: 1, decay: .014 + Math.random() * .02, r: 1 + Math.random() * 3, c: icolors[Math.floor(Math.random() * icolors.length)] }));
-      (function tick() { ictx.clearRect(0, 0, w, h); ictx.globalCompositeOperation = 'lighter'; let alive = false; for (const p of parts) { if (p.life <= 0) continue; p.life -= p.decay; if (p.life <= 0) continue; alive = true; p.x += p.vx; p.y += p.vy; p.vy += .06; ictx.globalAlpha = Math.max(0, p.life); ictx.fillStyle = p.c; ictx.fillRect(p.x, p.y, p.r, p.r) } ictx.globalAlpha = 1; ictx.globalCompositeOperation = 'source-over'; if (alive) requestAnimationFrame(tick) })();
+      const w = W(), h = H();
+      const cx = w / 2, cy = h * 0.44;
+      const parts = Array.from({ length: 120 }, () => {
+        const a = Math.random() * Math.PI * 2;
+        const spd = 2 + Math.random() * 14;
+        return {
+          x: cx, y: cy,
+          vx: Math.cos(a) * spd,
+          vy: Math.sin(a) * spd - 2,
+          life: 1,
+          decay: 0.008 + Math.random() * 0.016,
+          r: 1 + Math.random() * 4,
+          c: icolors[Math.floor(Math.random() * icolors.length)],
+          trail: []
+        };
+      });
+      (function tick() {
+        ictx.clearRect(0, 0, w, h);
+        ictx.globalCompositeOperation = 'lighter';
+        let alive = false;
+        for (const p of parts) {
+          if (p.life <= 0) continue;
+          p.life -= p.decay;
+          if (p.life <= 0) continue;
+          alive = true;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.04;
+          p.vx *= 0.99;
+          const alpha = Math.max(0, p.life);
+          ictx.globalAlpha = alpha * 0.4;
+          ictx.fillStyle = p.c;
+          if (p.r > 2) ictx.fillRect(p.x - p.r / 2, p.y - p.r / 2, p.r, p.r);
+          ictx.globalAlpha = alpha;
+          ictx.beginPath();
+          ictx.arc(p.x, p.y, p.r * 0.6, 0, Math.PI * 2);
+          ictx.fill();
+        }
+        ictx.globalAlpha = 1;
+        ictx.globalCompositeOperation = 'source-over';
+        if (alive) requestAnimationFrame(tick);
+      })();
     }
 
     initIntroParticles(); itick();
@@ -3940,8 +4574,12 @@
         document.body.classList.add('site-in');
         document.body.classList.remove('intro-active');
         intro.classList.add('open');
-      }, 400);
-      setTimeout(() => { intro.style.display = 'none'; window.scrollTo(0, 0); }, 1400);
+      }, 200);
+      setTimeout(() => {
+        intro.style.display = 'none';
+        window.scrollTo(0, 0);
+        refreshReveals();
+      }, 900);
     }
 
     if (prefersReduced) {
@@ -3949,8 +4587,8 @@
       document.body.classList.add('site-in');
       document.body.classList.remove('intro-active');
     } else {
-      setTimeout(() => { introTitle.classList.add('go'); intro.classList.add('go'); }, 1200);
-      setTimeout(finishIntro, 3200);
+      setTimeout(() => { introTitle.classList.add('go'); intro.classList.add('go'); }, 450);
+      setTimeout(finishIntro, 2200);
       skipBtn.addEventListener('click', finishIntro);
     }
 
