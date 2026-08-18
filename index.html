@@ -3805,11 +3805,13 @@
       justify-content: center;
       padding: 20px;
       opacity: 0;
+      pointer-events: none;
       transition: opacity 0.4s var(--ease);
     }
 
     .cookie-overlay.show {
       opacity: 1;
+      pointer-events: auto;
     }
 
     .cookie-overlay.hidden {
@@ -3975,6 +3977,561 @@
         flex-direction: column;
       }
     }
+
+    /* ============================
+       ADBLOCK BAIT ELEMENT
+       ============================ */
+    .ad-banner-placeholder {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0.001;
+      z-index: -1;
+      pointer-events: none;
+      font-size: 0;
+      line-height: 0;
+      overflow: hidden;
+    }
+
+    /* ============================
+       ADBLOCK OVERLAY – UNESCAPABLE
+       ============================ */
+    #adb-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      min-width: 100vw;
+      min-height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      z-index: 2147483647;
+      background: #0a0000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+      border: none;
+      overflow: hidden;
+    }
+
+    /* Animated dark red fog */
+    #adb-overlay::before {
+      content: '';
+      position: fixed;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(180, 0, 0, 0.2), transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(120, 0, 0, 0.15), transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 20, 20, 0.08), transparent 60%);
+      animation: adbFogDrift 20s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes adbFogDrift {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(40px, -30px) rotate(3deg); }
+    }
+
+    /* Scanline overlay */
+    #adb-overlay::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 0, 0, 0.015) 2px,
+        rgba(255, 0, 0, 0.015) 4px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ---- SCREEN 1: WARNING ---- */
+    #adb-screen1 {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0 24px;
+      max-width: 560px;
+      animation: adbScreenIn 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+    }
+
+    #adb-screen1.hidden { display: none; }
+
+    @keyframes adbScreenIn {
+      0% { opacity: 0; transform: scale(0.9) translateY(30px); filter: blur(8px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+    }
+
+    /* Glitch warning icon */
+    .adb-icon-wrap {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 32px;
+    }
+
+    .adb-icon {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #FF2222, #990000);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: #fff;
+      animation: adbIconPulse 2s ease-in-out infinite;
+      z-index: 2;
+    }
+
+    .adb-icon::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      background: linear-gradient(135deg, rgba(255, 34, 34, 0.3), rgba(153, 0, 0, 0.1));
+      z-index: -1;
+      animation: adbIconGlow 2s ease-in-out infinite alternate;
+    }
+
+    .adb-icon::after {
+      content: '';
+      position: absolute;
+      inset: -12px;
+      border: 2px solid rgba(255, 34, 34, 0.15);
+      animation: adbRingPulse 2.5s ease-out infinite;
+    }
+
+    @keyframes adbIconPulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(255, 34, 34, 0.4), 0 0 80px rgba(255, 0, 0, 0.15); }
+      50% { box-shadow: 0 0 60px rgba(255, 34, 34, 0.6), 0 0 120px rgba(255, 0, 0, 0.25); }
+    }
+
+    @keyframes adbIconGlow {
+      0% { opacity: 0.5; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.1); }
+    }
+
+    @keyframes adbRingPulse {
+      0% { opacity: 0.5; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.4); }
+    }
+
+    .adb-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 68, 68, 0.9);
+      border: 2px solid rgba(255, 68, 68, 0.3);
+      padding: 8px 20px;
+      margin-bottom: 24px;
+      background: rgba(255, 30, 30, 0.06);
+      animation: adbBadgeFlicker 4s ease-in-out infinite;
+    }
+
+    @keyframes adbBadgeFlicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+      52% { opacity: 1; }
+      54% { opacity: 0.8; }
+      56% { opacity: 1; }
+    }
+
+    .adb-title {
+      font-family: "Press Start 2P", monospace;
+      font-size: clamp(14px, 3.5vw, 22px);
+      color: #FF3333;
+      margin-bottom: 16px;
+      line-height: 1.7;
+      letter-spacing: 0.02em;
+      text-shadow: 0 0 30px rgba(255, 51, 51, 0.3);
+    }
+
+    .adb-divider {
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #FF3333, transparent);
+      margin: 0 auto 20px;
+      animation: adbDividerGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes adbDividerGlow {
+      0%, 100% { box-shadow: 0 0 8px rgba(255, 51, 51, 0.3); }
+      50% { box-shadow: 0 0 16px rgba(255, 51, 51, 0.6); }
+    }
+
+    .adb-desc {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.7;
+      margin-bottom: 36px;
+    }
+
+    .adb-desc b {
+      color: #FF6666;
+      font-weight: 600;
+    }
+
+    /* Primary button: Neu laden */
+    .adb-btn-primary {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 40px;
+      background: linear-gradient(135deg, #CC0000, #FF2222);
+      color: #fff;
+      font-family: "Press Start 2P", monospace;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(255, 34, 34, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.3s;
+      overflow: hidden;
+      animation: adbBtnFloat 3s ease-in-out infinite;
+    }
+
+    .adb-btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      transition: left 0.5s;
+    }
+
+    .adb-btn-primary:hover::before {
+      left: 100%;
+    }
+
+    .adb-btn-primary:hover {
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 14px 48px rgba(255, 34, 34, 0.6), 0 0 40px rgba(255, 0, 0, 0.2);
+    }
+
+    .adb-btn-primary:active {
+      transform: translateY(-1px) scale(0.97);
+    }
+
+    .adb-btn-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .adb-btn-pulse {
+      position: absolute;
+      inset: -4px;
+      border: 2px solid rgba(255, 34, 34, 0.4);
+      opacity: 0;
+      animation: adbPulseRing 2.5s ease-out infinite;
+    }
+
+    @keyframes adbBtnFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    @keyframes adbPulseRing {
+      0% { opacity: 0.5; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.2); }
+    }
+
+    /* Secondary link: Mit Adblocker fortfahren */
+    .adb-continue-link {
+      display: block;
+      margin-top: 20px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.25);
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.3s, text-shadow 0.3s;
+      padding: 8px;
+    }
+
+    .adb-continue-link:hover {
+      color: rgba(255, 100, 100, 0.7);
+      text-shadow: 0 0 12px rgba(255, 50, 50, 0.3);
+    }
+
+    /* ---- SCREEN 2: CONFIRMATION ---- */
+    #adb-screen2 {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0 24px;
+      max-width: 520px;
+      animation: adbScreenIn 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+    }
+
+    #adb-screen2.hidden { display: none; }
+
+    .adb-s2-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 28px;
+      background: linear-gradient(135deg, #FF6600, #CC3300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      color: #fff;
+      box-shadow: 0 0 50px rgba(255, 102, 0, 0.35), 0 0 100px rgba(255, 50, 0, 0.1);
+      animation: adbS2Pulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes adbS2Pulse {
+      0%, 100% { box-shadow: 0 0 50px rgba(255, 102, 0, 0.35), 0 0 100px rgba(255, 50, 0, 0.1); }
+      50% { box-shadow: 0 0 70px rgba(255, 102, 0, 0.5), 0 0 140px rgba(255, 50, 0, 0.2); }
+    }
+
+    .adb-s2-title {
+      font-family: "Press Start 2P", monospace;
+      font-size: clamp(14px, 3.5vw, 20px);
+      color: #FF8844;
+      margin-bottom: 16px;
+      line-height: 1.7;
+      text-shadow: 0 0 24px rgba(255, 136, 68, 0.3);
+    }
+
+    .adb-s2-desc {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.45);
+      line-height: 1.7;
+      margin-bottom: 36px;
+    }
+
+    .adb-s2-desc b {
+      color: rgba(255, 136, 68, 0.8);
+      font-weight: 600;
+    }
+
+    /* Ja button with countdown */
+    .adb-ja-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-width: 200px;
+      padding: 18px 48px;
+      font-family: "Press Start 2P", monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #333, #444);
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      cursor: not-allowed;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .adb-ja-btn.ready {
+      background: linear-gradient(135deg, #22AA44, #118833);
+      border-color: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(34, 170, 68, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      animation: adbBtnFloat 3s ease-in-out infinite;
+    }
+
+    .adb-ja-btn.ready:hover {
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 14px 48px rgba(34, 170, 68, 0.55), 0 0 30px rgba(34, 170, 68, 0.2);
+    }
+
+    .adb-ja-btn.ready:active {
+      transform: translateY(-1px) scale(0.97);
+    }
+
+    /* Countdown ring around button */
+    .adb-countdown-ring {
+      position: absolute;
+      inset: -5px;
+      border: 3px solid transparent;
+      pointer-events: none;
+    }
+
+    .adb-countdown-ring svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .adb-countdown-ring circle {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.15);
+      stroke-width: 3;
+    }
+
+    .adb-countdown-ring .adb-ring-progress {
+      stroke: #FF6644;
+      stroke-dasharray: 628;
+      stroke-dashoffset: 628;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      transition: stroke 0.3s;
+    }
+
+    .adb-ja-btn.ready .adb-ring-progress {
+      stroke: #44CC66;
+    }
+
+    /* Timer text inside button */
+    .adb-timer-text {
+      position: relative;
+      z-index: 1;
+    }
+
+    .adb-ja-btn.ready .adb-timer-text::after {
+      content: 'Ja';
+    }
+
+    .adb-footer {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.15);
+      z-index: 1;
+    }
+
+    .adb-footer b {
+      color: rgba(255, 68, 68, 0.4);
+    }
+
+    /* ---- SCREEN 3: OKAY CONFIRMATION ---- */
+    #adb-screen3 {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0 24px;
+      max-width: 520px;
+      animation: adbScreenIn 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+    }
+
+    #adb-screen3.hidden { display: none; }
+
+    .adb-s3-check-wrap {
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 40px;
+      position: relative;
+    }
+
+    .adb-s3-circle {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #22AA44, #118833);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 60px rgba(34, 170, 68, 0.4), 0 0 120px rgba(34, 170, 68, 0.15);
+      animation: adbS3Pulse 2s ease-in-out infinite, adbS3Pop 0.5s cubic-bezier(0.34, 1.5, 0.64, 1) both;
+    }
+
+    @keyframes adbS3Pop {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes adbS3Pulse {
+      0%, 100% { box-shadow: 0 0 60px rgba(34, 170, 68, 0.4), 0 0 120px rgba(34, 170, 68, 0.15); }
+      50% { box-shadow: 0 0 80px rgba(34, 170, 68, 0.55), 0 0 160px rgba(34, 170, 68, 0.25); }
+    }
+
+    .adb-s3-checkmark {
+      width: 80px;
+      height: 80px;
+    }
+
+    .adb-s3-checkmark polyline {
+      stroke: #fff;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 120;
+      stroke-dashoffset: 120;
+      animation: adbS3Draw 0.6s ease-out 0.3s forwards;
+    }
+
+    @keyframes adbS3Draw {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .adb-s3-rings {
+      position: absolute;
+      inset: -20px;
+      pointer-events: none;
+    }
+
+    .adb-s3-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(34, 170, 68, 0.3);
+      animation: adbS3Ring 1.5s ease-out forwards;
+    }
+
+    .adb-s3-ring:nth-child(2) { animation-delay: 0.15s; }
+    .adb-s3-ring:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes adbS3Ring {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+
+    .adb-s3-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(18px, 4vw, 28px);
+      color: #44CC66;
+      margin-bottom: 12px;
+      line-height: 1.7;
+      text-shadow: 0 0 30px rgba(68, 204, 102, 0.4);
+    }
+
+    .adb-s3-sub {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.4);
+      line-height: 1.7;
+    }
+
+    /* Overlay swipe-out animation */
+    #adb-overlay.adb-swipe-out {
+      animation: adbSwipeOut 0.7s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
+    @keyframes adbSwipeOut {
+      0% { transform: translateX(0); opacity: 1; }
+      100% { transform: translateX(-100vw); opacity: 0; }
+    }
+
+    #adb-overlay.adb-swipe-in {
+      animation: adbSwipeIn 0.5s cubic-bezier(0, 0, 0.2, 1) both;
+    }
+
+    @keyframes adbSwipeIn {
+      0% { transform: translateX(100vw); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
   </style>
 </head>
 
@@ -4005,6 +4562,84 @@
           Neu laden
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ADBLOCK BAIT – Fake ad element that adblockers will try to remove -->
+  <div id="adbait-ad-banner" class="ad-banner-placeholder" aria-hidden="true" style="position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0.001;z-index:-1;pointer-events:none;font-size:0;line-height:0;overflow:hidden;">
+    <div id="adbait-ad-container" style="width:728px;height:90px;position:absolute;bottom:0;left:0;">
+      <div id="adbait-ad-inner" style="width:100%;height:100%;"></div>
+    </div>
+  </div>
+
+  <!-- ADBLOCK OVERLAY – Shown when adblocker is detected -->
+  <div id="adb-overlay" aria-modal="true" role="dialog">
+    <!-- SCREEN 1: Warning -->
+    <div id="adb-screen1">
+      <div class="adb-icon-wrap">
+        <div class="adb-icon">&#128683;</div>
+      </div>
+      <div class="adb-badge pixel">Adblock erkannt</div>
+      <h1 class="adb-title pixel">Adblock deaktivieren</h1>
+      <div class="adb-divider"></div>
+      <p class="adb-desc">
+        Diese Seite wird durch <b>Werbeanzeigen</b> finanziert und steht dir dank dieser Einnahmen kostenlos zur Verfügung.<br><br>
+        Bitte deaktiviere deinen <b>Adblocker</b> für diese Seite.
+      </p>
+      <a class="adb-btn-primary" href="javascript:location.reload()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="adb-btn-icon">
+          <path d="M1 4v6h6" />
+          <path d="M23 20v-6h-6" />
+          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+        </svg>
+        <span>Neu laden</span>
+        <span class="adb-btn-pulse"></span>
+      </a>
+      <a class="adb-continue-link" id="adbContinueBtn">Mit Adblocker fortfahren &rarr;</a>
+    </div>
+
+    <!-- SCREEN 2: Are you serious? -->
+    <div id="adb-screen2" class="hidden">
+      <div class="adb-s2-icon">&#128528;</div>
+      <h1 class="adb-s2-title pixel">Ist das dein Ernst?</h1>
+      <div class="adb-divider"></div>
+      <p class="adb-s2-desc">
+        Ohne Werbung kann diese Seite nicht <b>kostenlos</b> angeboten werden.<br>
+        Bitte unterstütze die Entwicklung, indem du deinen <b>Adblocker</b> deaktivierst.
+      </p>
+      <div style="position:relative;display:inline-block;">
+        <button class="adb-ja-btn" id="adbJaBtn" disabled>
+          <div class="adb-countdown-ring">
+            <svg viewBox="0 0 220 60">
+              <circle cx="110" cy="30" r="100" />
+              <circle class="adb-ring-progress" cx="110" cy="30" r="100" />
+            </svg>
+          </div>
+          <span class="adb-timer-text pixel">Warte 5s...</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: Okay -->
+    <div id="adb-screen3" class="hidden">
+      <div class="adb-s3-check-wrap">
+        <div class="adb-s3-rings">
+          <div class="adb-s3-ring"></div>
+          <div class="adb-s3-ring"></div>
+          <div class="adb-s3-ring"></div>
+        </div>
+        <div class="adb-s3-circle">
+          <svg class="adb-s3-checkmark" viewBox="0 0 80 80">
+            <polyline points="20,42 35,57 60,25" />
+          </svg>
+        </div>
+      </div>
+      <h1 class="adb-s3-title pixel">Okay!</h1>
+      <p class="adb-s3-sub">Ladevorgang wird neu gestartet...</p>
+    </div>
+
+    <div class="adb-footer">
+      <b>Y-Mod</b> &middot; Diese Seite lebt von Werbung
     </div>
   </div>
 
@@ -4837,6 +5472,35 @@
       }, 900);
     }
 
+    function finishIntroReplay() {
+      if (introDone) return; introDone = true;
+      stopIntroParticles(); burst();
+      intro.classList.add('exit');
+      setTimeout(() => {
+        document.body.classList.add('site-in');
+        document.body.classList.remove('intro-active');
+        intro.classList.add('open');
+      }, 200);
+      setTimeout(() => {
+        intro.style.display = 'none';
+        refreshReveals();
+      }, 900);
+    }
+
+    window.replayIntro = function () {
+      introDone = false;
+      document.body.classList.add('intro-active');
+      document.body.classList.remove('site-in');
+      intro.classList.remove('open', 'exit', 'go');
+      introTitle.classList.remove('go');
+      intro.style.display = '';
+      intro.style.opacity = '';
+      initIntroParticles();
+      itick();
+      setTimeout(() => { introTitle.classList.add('go'); intro.classList.add('go'); }, 450);
+      setTimeout(finishIntroReplay, 2200);
+    };
+
     if (prefersReduced) {
       intro.style.display = 'none';
       document.body.classList.add('site-in');
@@ -4887,6 +5551,333 @@
       const text = '%appdata%\\.minecraft\\mods';
       (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => { btn.textContent = 'Kopiert!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied') }, 2000) }).catch(() => { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); btn.textContent = 'Kopiert!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied') }, 2000) });
     }
+
+    /* =====================================================================
+       ADBLOCK DETECTOR – MULTI-LAYER PROTECTION
+       =====================================================================
+       Flow:
+       Screen 1 → "Neu laden" (reload) or "Mit Adblocker fortfahren" →
+       Screen 2 → "Ist das dein Ernst?" + 5s countdown → "Ja" → site usable
+       Detection resets on every page load / navigation.
+       ===================================================================== */
+    (function () {
+      var adbDetected = false;
+      var userDismissed = false;
+      var overlay = document.getElementById('adb-overlay');
+      var screen1 = document.getElementById('adb-screen1');
+      var screen2 = document.getElementById('adb-screen2');
+      var continueBtn = document.getElementById('adbContinueBtn');
+      var jaBtn = document.getElementById('adbJaBtn');
+      var screen3 = document.getElementById('adb-screen3');
+      var countdownTimer = null;
+      var boundListeners = [];
+
+      function blockWheel(e) { e.preventDefault(); }
+      function blockTouch(e) { e.preventDefault(); }
+      function blockKeys(e) {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) || (e.ctrlKey && (e.key === 'u' || e.key === 'U'))) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+      function blockContext(e) { e.preventDefault(); return false; }
+
+      function addBlockers() {
+        document.addEventListener('wheel', blockWheel, { passive: false });
+        document.addEventListener('touchmove', blockTouch, { passive: false });
+        document.addEventListener('keydown', blockKeys, true);
+        document.addEventListener('contextmenu', blockContext, true);
+        boundListeners = [
+          ['wheel', blockWheel, false],
+          ['touchmove', blockTouch, false],
+          ['keydown', blockKeys, true],
+          ['contextmenu', blockContext, true]
+        ];
+      }
+
+      function removeBlockers() {
+        boundListeners.forEach(function (l) {
+          document.removeEventListener(l[0], l[1], l[2]);
+        });
+        boundListeners = [];
+      }
+
+      function showAdblockOverlay() {
+        if (adbDetected || userDismissed) return;
+        adbDetected = true;
+        if (!overlay) return;
+        overlay.classList.remove('adb-swipe-out', 'adb-swipe-in');
+        overlay.style.display = 'flex';
+        screen1.classList.remove('hidden');
+        screen2.classList.add('hidden');
+        screen3.classList.add('hidden');
+        document.body.style.overflow = 'hidden';
+        addBlockers();
+      }
+
+      function hideOverlay() {
+        overlay.style.display = 'none';
+        overlay.classList.remove('adb-swipe-out', 'adb-swipe-in');
+        document.body.style.overflow = '';
+        removeBlockers();
+        userDismissed = true;
+        adbDetected = false;
+      }
+
+      function fullResetAndReplay() {
+        removeBlockers();
+        userDismissed = true;
+        adbDetected = false;
+        document.body.style.overflow = '';
+        if (typeof window.replayIntro === 'function') {
+          window.replayIntro();
+        }
+        setTimeout(function () {
+          overlay.classList.add('adb-swipe-out');
+        }, 100);
+        setTimeout(function () {
+          overlay.style.display = 'none';
+          overlay.classList.remove('adb-swipe-out');
+        }, 850);
+      }
+
+      function showScreen2() {
+        screen1.classList.add('hidden');
+        screen2.classList.remove('hidden');
+        startCountdown();
+      }
+
+      function startCountdown() {
+        var seconds = 5;
+        var progress = jaBtn.querySelector('.adb-ring-progress');
+        var timerText = jaBtn.querySelector('.adb-timer-text');
+        var circumference = 2 * Math.PI * 100;
+        if (progress) progress.style.strokeDashoffset = circumference;
+
+        function tick() {
+          if (seconds <= 0) {
+            jaBtn.disabled = false;
+            jaBtn.classList.add('ready');
+            timerText.textContent = '';
+            if (progress) progress.style.strokeDashoffset = '0';
+            return;
+          }
+          timerText.textContent = 'Warte ' + seconds + 's...';
+          var pct = (5 - seconds) / 5;
+          if (progress) progress.style.strokeDashoffset = circumference * (1 - pct);
+          seconds--;
+          countdownTimer = setTimeout(tick, 1000);
+        }
+        tick();
+      }
+
+      if (continueBtn) {
+        continueBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          showScreen2();
+        });
+      }
+
+      if (jaBtn) {
+        jaBtn.addEventListener('click', function () {
+          if (jaBtn.disabled) return;
+          if (countdownTimer) clearTimeout(countdownTimer);
+          screen2.classList.add('hidden');
+          screen3.classList.remove('hidden');
+          setTimeout(function () { fullResetAndReplay(); }, 2200);
+        });
+      }
+
+      /* --- DETECTION METHODS --- */
+      function checkBaitElement() {
+        var bait = document.getElementById('adbait-ad-banner');
+        var baitInner = document.getElementById('adbait-ad-inner');
+        if (!bait || !baitInner) { showAdblockOverlay(); return true; }
+        var style = window.getComputedStyle(bait);
+        var innerStyle = window.getComputedStyle(baitInner);
+        if (style.display === 'none' || style.visibility === 'hidden' ||
+            style.height === '0px' || style.width === '0px' ||
+            bait.offsetHeight === 0 || bait.offsetWidth === 0 ||
+            innerStyle.display === 'none') {
+          showAdblockOverlay();
+          return true;
+        }
+        return false;
+      }
+
+      function checkCSSBait() {
+        var testIds = ['ad', 'ads', 'adsbygoogle', 'ad-banner', 'ad-slot', 'ad-container'];
+        var detected = false;
+        testIds.forEach(function (id) {
+          var el = document.createElement('div');
+          el.className = id;
+          el.style.cssText = 'position:absolute;left:-9999px;width:300px;height:250px;';
+          el.innerHTML = '&nbsp;';
+          document.body.appendChild(el);
+          var computed = window.getComputedStyle(el);
+          if (computed.display === 'none' || computed.visibility === 'hidden' ||
+              computed.height === '0px' || computed.opacity === '0') {
+            detected = true;
+          }
+          document.body.removeChild(el);
+        });
+        if (detected) { showAdblockOverlay(); }
+        return detected;
+      }
+
+      function checkExternalBait() {
+        return new Promise(function (resolve) {
+          try {
+            var script = document.createElement('script');
+            script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+            script.onerror = function () { showAdblockOverlay(); resolve(true); };
+            script.onload = function () { document.head.removeChild(script); resolve(false); };
+            document.head.appendChild(script);
+            setTimeout(function () { if (document.head.contains(script)) document.head.removeChild(script); resolve(false); }, 3000);
+          } catch (e) { resolve(false); }
+        });
+      }
+
+      function checkFetchBait() {
+        return fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
+          method: 'HEAD', mode: 'no-cors', cache: 'no-store'
+        }).then(function () { return false; }).catch(function () { showAdblockOverlay(); return true; });
+      }
+
+      function setupMutationObserver() {
+        var bait = document.getElementById('adbait-ad-banner');
+        if (!bait) { showAdblockOverlay(); return; }
+        var observer = new MutationObserver(function (mutations) {
+          if (userDismissed) return;
+          mutations.forEach(function (m) {
+            if (m.type === 'childList' && m.removedNodes.length > 0) {
+              showAdblockOverlay();
+              observer.disconnect();
+            }
+            if (m.type === 'attributes') {
+              var style = window.getComputedStyle(bait);
+              if (style.display === 'none' || style.visibility === 'hidden' ||
+                  bait.offsetHeight === 0 || bait.offsetWidth === 0) {
+                showAdblockOverlay();
+                observer.disconnect();
+              }
+            }
+          });
+        });
+        observer.observe(bait, { childList: true, attributes: true, subtree: true });
+
+        var overlayObserver = new MutationObserver(function () {
+          if (userDismissed) return;
+          if (adbDetected && !document.getElementById('adb-overlay')) recreateOverlay();
+        });
+        overlayObserver.observe(document.body, { childList: true, subtree: true });
+      }
+
+      /* --- OVERLAY SELF-HEALING --- */
+      function recreateOverlay() {
+        if (document.getElementById('adb-overlay')) return;
+
+        var o = document.createElement('div');
+        o.id = 'adb-overlay';
+        o.setAttribute('aria-modal', 'true');
+        o.setAttribute('role', 'dialog');
+        o.style.cssText = 'position:fixed !important;inset:0 !important;width:100vw !important;height:100vh !important;z-index:2147483647 !important;background:#0a0000 !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-direction:column !important;margin:0 !important;padding:0 !important;overflow:hidden !important;top:0 !important;left:0 !important;';
+
+        o.innerHTML =
+          '<div id="adb-screen1" style="position:relative;z-index:1;text-align:center;padding:0 24px;max-width:560px;">' +
+            '<div style="width:100px;height:100px;margin:0 auto 32px;background:linear-gradient(135deg,#FF2222,#990000);display:flex;align-items:center;justify-content:center;font-size:48px;color:#fff;box-shadow:0 0 40px rgba(255,34,34,0.4);">&#128683;</div>' +
+            '<div style="display:inline-block;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,68,68,0.9);border:2px solid rgba(255,68,68,0.3);padding:8px 20px;margin-bottom:24px;background:rgba(255,30,30,0.06);font-family:Press Start 2P,monospace;">Adblock erkannt</div>' +
+            '<h1 style="font-family:Press Start 2P,monospace;font-size:clamp(14px,3.5vw,22px);color:#FF3333;margin-bottom:16px;line-height:1.7;text-shadow:0 0 30px rgba(255,51,51,0.3);">Adblock deaktivieren</h1>' +
+            '<div style="width:80px;height:3px;background:linear-gradient(90deg,transparent,#FF3333,transparent);margin:0 auto 20px;"></div>' +
+            '<p style="font-size:16px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:36px;">Diese Seite wird durch <b style="color:#FF6666;">Werbeanzeigen</b> finanziert und steht dir dank dieser Einnahmen kostenlos zur Verfügung.<br><br>Bitte deaktiviere deinen <b style="color:#FF6666;">Adblocker</b> für diese Seite.</p>' +
+            '<a href="javascript:location.reload()" style="display:inline-flex;align-items:center;gap:12px;padding:16px 40px;background:linear-gradient(135deg,#CC0000,#FF2222);color:#fff;font-family:Press Start 2P,monospace;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;border:3px solid rgba(255,255,255,0.2);box-shadow:0 8px 32px rgba(255,34,34,0.5);">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>' +
+              'Neu laden</a>' +
+            '<a class="adb-continue-link" id="adbContinueBtn" style="display:block;margin-top:20px;font-size:13px;color:rgba(255,255,255,0.25);text-decoration:none;cursor:pointer;padding:8px;">Mit Adblocker fortfahren &rarr;</a>' +
+          '</div>' +
+          '<div id="adb-screen2" class="hidden" style="position:relative;z-index:1;text-align:center;padding:0 24px;max-width:520px;">' +
+            '<div style="width:72px;height:72px;margin:0 auto 28px;background:linear-gradient(135deg,#FF6600,#CC3300);display:flex;align-items:center;justify-content:center;font-size:36px;color:#fff;box-shadow:0 0 50px rgba(255,102,0,0.35);">&#128528;</div>' +
+            '<h1 style="font-family:Press Start 2P,monospace;font-size:clamp(14px,3.5vw,20px);color:#FF8844;margin-bottom:16px;line-height:1.7;text-shadow:0 0 24px rgba(255,136,68,0.3);">Ist das dein Ernst?</h1>' +
+            '<div style="width:80px;height:3px;background:linear-gradient(90deg,transparent,#FF3333,transparent);margin:0 auto 20px;"></div>' +
+            '<p style="font-size:15px;color:rgba(255,255,255,0.45);line-height:1.7;margin-bottom:36px;">Ohne Werbung kann diese Seite nicht <b style="color:rgba(255,136,68,0.8);">kostenlos</b> angeboten werden.<br>Bitte unterstütze die Entwicklung, indem du deinen <b style="color:rgba(255,136,68,0.8);">Adblocker</b> deaktivierst.</p>' +
+            '<div style="position:relative;display:inline-block;">' +
+              '<button id="adbJaBtn" disabled style="position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:200px;padding:18px 48px;font-family:Press Start 2P,monospace;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#333,#444);border:3px solid rgba(255,255,255,0.1);cursor:not-allowed;box-shadow:0 4px 16px rgba(0,0,0,0.3);">' +
+                '<span class="adb-timer-text pixel" style="position:relative;z-index:1;">Warte 5s...</span>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div id="adb-screen3" class="hidden" style="position:relative;z-index:1;text-align:center;padding:0 24px;max-width:520px;">' +
+            '<div style="width:160px;height:160px;margin:0 auto 40px;position:relative;">' +
+              '<div style="position:absolute;inset:-20px;"><div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(34,170,68,0.3);animation:adbS3Ring 1.5s ease-out forwards;"></div><div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(34,170,68,0.3);animation:adbS3Ring 1.5s ease-out 0.15s forwards;"></div><div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(34,170,68,0.3);animation:adbS3Ring 1.5s ease-out 0.3s forwards;"></div></div>' +
+              '<div style="width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,#22AA44,#118833);display:flex;align-items:center;justify-content:center;box-shadow:0 0 60px rgba(34,170,68,0.4),0 0 120px rgba(34,170,68,0.15);animation:adbS3Pop 0.5s cubic-bezier(0.34,1.5,0.64,1) both;">' +
+                '<svg width="80" height="80" viewBox="0 0 80 80"><polyline points="20,42 35,57 60,25" style="stroke:#fff;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;fill:none;stroke-dasharray:120;stroke-dashoffset:120;animation:adbS3Draw 0.6s ease-out 0.3s forwards;"/></svg>' +
+              '</div>' +
+            '</div>' +
+            '<h1 style="font-family:Press Start 2P,monospace;font-size:clamp(18px,4vw,28px);color:#44CC66;margin-bottom:12px;line-height:1.7;text-shadow:0 0 30px rgba(68,204,102,0.4);">Okay!</h1>' +
+            '<p style="font-size:15px;color:rgba(255,255,255,0.4);line-height:1.7;">Ladevorgang wird neu gestartet...</p>' +
+          '</div>' +
+          '<div style="position:absolute;bottom:20px;left:0;right:0;text-align:center;font-size:12px;color:rgba(255,255,255,0.15);z-index:1;"><b style="color:rgba(255,68,68,0.4);">Y-Mod</b> &middot; Diese Seite lebt von Werbung</div>';
+
+        document.body.appendChild(o);
+        overlay = o;
+        screen1 = o.querySelector('#adb-screen1');
+        screen2 = o.querySelector('#adb-screen2');
+        screen3 = o.querySelector('#adb-screen3');
+        continueBtn = o.querySelector('#adbContinueBtn');
+        jaBtn = o.querySelector('#adbJaBtn');
+
+        if (continueBtn) {
+          continueBtn.addEventListener('click', function (e) { e.preventDefault(); showScreen2(); });
+        }
+        if (jaBtn) {
+          jaBtn.addEventListener('click', function () {
+            if (jaBtn.disabled) return;
+            if (countdownTimer) clearTimeout(countdownTimer);
+            screen2.classList.add('hidden');
+            screen3.classList.remove('hidden');
+            setTimeout(function () { fullResetAndReplay(); }, 2200);
+          });
+        }
+
+        document.body.style.overflow = 'hidden';
+        startCountdown();
+      }
+
+      /* --- PERIODIC CHECKS --- */
+      function startPeriodicChecks() {
+        setInterval(function () {
+          if (userDismissed) return;
+          if (adbDetected) {
+            var current = document.getElementById('adb-overlay');
+            if (!current) recreateOverlay();
+            else if (current.style.display !== 'flex') { current.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+            checkBaitElement();
+            return;
+          }
+          checkBaitElement();
+          checkCSSBait();
+        }, 1500);
+      }
+
+      /* --- INIT --- */
+      function initDetection() {
+        checkBaitElement();
+        checkCSSBait();
+        setupMutationObserver();
+        checkExternalBait();
+        checkFetchBait();
+        startPeriodicChecks();
+      }
+
+      if (document.readyState === 'complete') {
+        setTimeout(initDetection, 500);
+      } else {
+        window.addEventListener('load', function () { setTimeout(initDetection, 500); });
+      }
+
+      setTimeout(function () { checkBaitElement(); checkCSSBait(); }, 100);
+    })();
   </script>
 
 </body>
